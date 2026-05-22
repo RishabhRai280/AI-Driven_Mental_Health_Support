@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Mascot from "./components/Mascot";
+import RotatingText from "./components/RotatingText";
 
 export default function LandingPage() {
   return (
@@ -79,20 +80,52 @@ export default function LandingPage() {
           {/* Left Column - Content */}
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             <div
+              className="hero-rotating-row"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "8px",
-                backgroundColor: "rgba(125, 170, 143, 0.12)",
-                padding: "6px 14px",
-                borderRadius: "20px",
-                color: "var(--color-secondary)",
-                fontSize: "14px",
+                gap: "10px",
+                fontSize: "26px",
                 fontWeight: "600",
                 width: "fit-content",
               }}
             >
-              🌱 Your Gentle Safe Space
+              <span
+                style={{
+                  color: "var(--color-primary)",
+                  fontFamily: "var(--font-header)",
+                }}
+              >
+                Your
+              </span>
+              <span
+                className="hero-rotating-pill"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  backgroundColor: "rgba(125, 170, 143, 0.12)",
+                  padding: "10px 20px",
+                  borderRadius: "20px",
+                  color: "var(--color-secondary)",
+                  width: "fit-content",
+                }}
+              >
+                <RotatingText
+                  texts={["Safe Space", "Emotional Wellbeing", "Mental Wellness"]}
+                  mainClassName="hero-rotating-text overflow-hidden"
+                  staggerFrom="first"
+                  initial={{ y: "45%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "-45%" }}
+                  staggerDuration={0.02}
+                  splitLevelClassName="overflow-hidden"
+                  transition={{ type: "spring", damping: 35, stiffness: 450 }}
+                  rotationInterval={3000}
+                  splitBy="words"
+                  auto
+                  loop
+                />
+              </span>
             </div>
             <h1
               style={{
