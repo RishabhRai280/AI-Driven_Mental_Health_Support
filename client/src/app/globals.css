@@ -257,7 +257,13 @@ input:focus, textarea:focus {
   flex-direction: column;
   padding: 24px 16px;
   z-index: 100;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.6s ease;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.6s ease;
+}
+
+/* Collapsed Sidebar on Desktop */
+.app-sidebar.collapsed {
+  width: 88px;
+  padding: 24px 14px;
 }
 
 .authenticated-content-wrapper {
@@ -268,13 +274,35 @@ input:focus, textarea:focus {
   transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.6s ease;
 }
 
+.authenticated-content-wrapper.sidebar-collapsed {
+  margin-left: 88px;
+}
+
+/* SOS pulse glow animation when collapsed */
+@keyframes sos-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(192, 118, 90, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(192, 118, 90, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(192, 118, 90, 0);
+  }
+}
+
+.sos-btn.collapsed-sos {
+  animation: sos-pulse 2s infinite;
+}
+
 /* Mobile responsive rules */
 @media (max-width: 1024px) {
   .app-sidebar {
+    width: 280px !important;
     transform: translateX(-100%);
   }
   .app-sidebar.open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
   }
   .mobile-overlay {
     display: none;
@@ -292,3 +320,4 @@ input:focus, textarea:focus {
     margin-left: 0 !important;
   }
 }
+

@@ -7,9 +7,16 @@ import { usePathname } from "next/navigation";
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+export default function Sidebar({
+  isOpen = false,
+  onClose,
+  isCollapsed = false,
+  onToggleCollapse,
+}: SidebarProps) {
   const pathname = usePathname();
 
   const menuItems = [
@@ -72,19 +79,20 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           backgroundColor: "rgba(0, 0, 0, 0.4)",
           backdropFilter: "blur(4px)",
           zIndex: 90,
+          display: isOpen ? "block" : "none",
         }}
       />
 
       {/* Main Sidebar Panel */}
-      <aside className={`app-sidebar ${isOpen ? "open" : ""}`}>
+      <aside className={`app-sidebar ${isOpen ? "open" : ""} ${isCollapsed ? "collapsed" : ""}`}>
         {/* Brand Logo Header */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: isCollapsed ? "center" : "space-between",
             marginBottom: "32px",
-            padding: "0 8px",
+            padding: isCollapsed ? "0" : "0 8px",
           }}
         >
           <Link
@@ -92,8 +100,9 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "10px",
+              gap: isCollapsed ? "0" : "10px",
             }}
+            title={isCollapsed ? "SereneMind Dashboard" : undefined}
           >
             <div
               style={{
@@ -107,21 +116,25 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 color: "#FFFFFF",
                 fontWeight: "bold",
                 boxShadow: "0 4px 10px rgba(91, 127, 166, 0.3)",
+                flexShrink: 0,
               }}
             >
               S
             </div>
-            <span
-              style={{
-                fontFamily: "var(--font-header)",
-                fontSize: "20px",
-                fontWeight: "500",
-                color: "var(--text-primary)",
-                letterSpacing: "-0.5px",
-              }}
-            >
-              Serene<span style={{ color: "var(--color-secondary)" }}>Mind</span>
-            </span>
+            {!isCollapsed && (
+              <span
+                style={{
+                  fontFamily: "var(--font-header)",
+                  fontSize: "20px",
+                  fontWeight: "500",
+                  color: "var(--text-primary)",
+                  letterSpacing: "-0.5px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Serene<span style={{ color: "var(--color-secondary)" }}>Mind</span>
+              </span>
+            )}
           </Link>
 
           {/* Close button on mobile */}
@@ -152,11 +165,13 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 key={item.path}
                 href={item.path}
                 onClick={onClose}
+                title={isCollapsed ? item.name : undefined}
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "12px",
-                  padding: "12px 16px",
+                  justifyContent: isCollapsed ? "center" : "flex-start",
+                  gap: isCollapsed ? "0" : "12px",
+                  padding: isCollapsed ? "12px" : "12px 16px",
                   borderRadius: "14px",
                   fontSize: "15px",
                   fontWeight: "500",
@@ -171,11 +186,16 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                     color: isActive ? "var(--color-primary)" : "var(--text-secondary)",
                     display: "flex",
                     alignItems: "center",
+                    flexShrink: 0,
                   }}
                 >
                   {item.icon}
                 </span>
-                {item.name}
+                {!isCollapsed && (
+                  <span style={{ whiteSpace: "nowrap", transition: "opacity 0.2s" }}>
+                    {item.name}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -190,17 +210,18 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           }}
         />
 
-        {/* Sienna-colored Emergency SOS Button */}
-        <div style={{ padding: "0 4px" }}>
+        {/* SOS Button Area */}
+        <div style={{ padding: "0 4px", display: "flex", justifyContent: "center" }}>
           <Link
             href="/crisis-sos"
             onClick={onClose}
+            title="CRISIS SOS"
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: "8px",
-              padding: "14px",
+              gap: isCollapsed ? "0" : "8px",
+              padding: isCollapsed ? "12px" : "14px",
               borderRadius: "16px",
               backgroundColor: "transparent",
               border: "2px solid var(--color-error)",
@@ -211,14 +232,78 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               letterSpacing: "0.5px",
               transition: "all 0.2s ease",
               boxShadow: "0 4px 12px rgba(192, 118, 90, 0.05)",
+              width: isCollapsed ? "44px" : "100%",
+              height: isCollapsed ? "44px" : "auto",
+              flexShrink: 0,
             }}
-            className="sos-btn"
+            className={`sos-btn ${isCollapsed ? "collapsed-sos" : ""}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            CRISIS SOS
+            {!isCollapsed && "CRISIS SOS"}
           </Link>
         </div>
+
+        {/* Desktop Collapse Toggle Button */}
+        {onToggleCollapse && (
+          <button
+            onClick={onToggleCollapse}
+            className="desktop-collapse-toggle-btn"
+            title={isCollapsed ? "Expand Navigation" : "Collapse Navigation"}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+              padding: "12px 4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isCollapsed ? "center" : "flex-start",
+              borderRadius: "12px",
+              marginTop: "12px",
+              width: "100%",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                justifyContent: "center",
+                width: "100%",
+              }}
+            >
+              {isCollapsed ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+                  <span style={{ fontSize: "14px", fontWeight: "500", whiteSpace: "nowrap" }}>Collapse Panel</span>
+                </>
+              )}
+            </div>
+          </button>
+        )}
       </aside>
+
+      <style jsx global>{`
+        .desktop-collapse-toggle-btn:hover {
+          color: var(--color-primary) !important;
+          background-color: rgba(91, 127, 166, 0.05) !important;
+        }
+
+        .sidebar-item:hover {
+          color: var(--color-primary) !important;
+          background-color: rgba(91, 127, 166, 0.05) !important;
+          transform: translateY(-1px);
+        }
+
+        @media (max-width: 1024px) {
+          .desktop-collapse-toggle-btn {
+            display: none !important;
+          }
+        }
+      `}</style>
     </>
   );
 }
