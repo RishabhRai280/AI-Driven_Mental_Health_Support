@@ -19,12 +19,21 @@ graph TD
 ## 1. Modular Architecture Tiers
 
 ### 1.1. Client Tier (Frontend)
-*   **Tech Stack**: Next.js (Web) or React Native (Mobile) utilizing TypeScript and HSL custom vanilla CSS styling.
+*   **Tech Stack**: Next.js (App Router) utilizing TypeScript and custom vanilla CSS modules conforming to the `mental_health_chatbot_color_framework.md`.
+*   **Project Structure (Next.js App Router)**:
+    *   `/app/page.tsx`: Landing Page
+    *   `/app/(auth)/login/page.tsx`: Login/Register Page
+    *   `/app/(main)/dashboard/page.tsx`: Main Dashboard
+    *   `/app/(main)/chat/page.tsx`: Chatbot Page
+    *   `/app/(main)/journal/page.tsx`: Journaling Page
+    *   `/app/(main)/history/page.tsx`: History & Summaries Page
+    *   `/app/(main)/analysis/page.tsx`: Analysis Page
+    *   `/app/(main)/crisis/page.tsx`: Crisis SOS System
+    *   `/app/(main)/exercises/page.tsx`: Recommended Exercises Page
 *   **Key Responsibilities**:
-    *   Rendering beautiful, fluid glassmorphic UI components.
-    *   Managing local authentication state and encrypted local caching (using SecureStore/LocalStorage).
+    *   Rendering fluid, calming UI components based on the established color framework.
+    *   Managing local authentication state and encrypted local caching.
     *   Establishing persistent WebSockets for low-latency streaming chat interactions.
-    *   Handling client-side data scrubbing (e.g., stripping local device identifiers before payload transmission).
 
 ### 1.2. Core Backend Tier (API Gateway)
 *   **Tech Stack**: Node.js with Express & TypeScript.

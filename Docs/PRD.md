@@ -27,46 +27,45 @@
 
 ---
 
-## 3. Core Feature Specifications
+## 3. Core Feature Specifications & App Pages
 
-### 3.1. Empathetic AI Companion (SereneAI)
-*   **Description**: A conversational assistant that interacts using empathetic, reflective listening techniques.
-*   **Behavioral Rules**:
-    *   Adhere strictly to CBT/DBT principles (guided self-reflection, behavior reframing, mindfulness guidance).
-    *   Never diagnose, prescribe, or give medical advice.
-    *   Maintain a supportive, validating, yet objective tone.
-*   **Technical Requirements**:
-    *   Streaming text responses with typing indicators.
-    *   Contextual memory (short-term session context and long-term key insights, keeping privacy intact).
-    *   Dynamic mood tag detection (e.g., identifying when the conversation shifts from 'stressed' to 'calm').
+The application is structured into 9 core pages/workspaces:
 
-### 3.2. Sentiment-Analyzed Journaling
-*   **Description**: A digital journal that provides users with immediate sentiment and cognitive distortion insights.
-*   **Key Capabilities**:
-    *   *Free-form entry*: Clean writing interface with auto-save.
-    *   *Emotion Tagging*: Automatically detects primary/secondary emotions (e.g., Joy: 20%, Sadness: 60%, Fear: 20%).
-    *   *Cognitive Distortion Detection*: Flags common negative thinking patterns (e.g., Catastrophizing, Overgeneralization, Emotional Reasoning) and offers gentle, reflective reframing prompts.
+### 3.1. Landing Page (Home)
+*   **Description**: The entry point introducing the SereneMind vision.
+*   **Key Capabilities**: Value proposition, clinical disclaimers, and clear calls to action for registration or login.
 
-### 3.3. Mood & Context Logging
-*   **Description**: A frictionless daily check-in that takes less than 10 seconds.
-*   **Key Capabilities**:
-    *   *Circular Slider*: Numerical mood logging from 1 (severe distress) to 10 (optimal well-being).
-    *   *Contextual Tags*: Fast selection of activities (e.g., Sleep, Social, Exercise, Work, Nutrition).
-    *   *Custom Notes*: Optional brief text for extra context.
+### 3.2. Authentication (Login/Register)
+*   **Description**: Secure access portal.
+*   **Key Capabilities**: Standard login, anonymous profile creation, and HIPAA-compliant password/session management.
 
-### 3.4. Mindfulness Content & Exercises
-*   **Description**: A library of quick, practical self-regulation exercises.
-*   **Key Capabilities**:
-    *   *Breathing Pacer*: Interactive visual pacer for Box Breathing (4-4-4-4) and 4-7-8 techniques.
-    *   *Guided Audio*: Audio player with clean, minimalist design for ambient sounds, progressive muscle relaxation, and guided meditations.
-    *   *Daily Prompts*: AI-recommended exercises based on the user's logged mood (e.g., recommending a grounding exercise if mood is logged < 4).
+### 3.3. Main Dashboard
+*   **Description**: The central hub with a dynamic sidebar for navigation.
+*   **Key Capabilities**: Overview of the user's current mood, quick interactions, and access to all other application modules via the sidebar.
 
-### 3.5. Analytics & Wellness Reports
-*   **Description**: A dashboard that visualizes the user’s mental wellness journey over time.
-*   **Key Capabilities**:
-    *   *Monthly Map*: Interactive color-coded heatmap calendar showing daily emotional states.
-    *   *Correlation Engine*: AI-calculated correlations (e.g., "Exercising correlates with a 45% increase in 'Happy' tags" or "Sleep quality < 6 hours is associated with a spike in 'Anxiety' tags").
-    *   *Exportable Reports*: Beautiful, secure PDFs summarizing mood history to share with professional therapists.
+### 3.4. Chatbot Page
+*   **Description**: The empathetic conversational interface.
+*   **Key Capabilities**: Real-time CBT-based chat with typing indicators and mood tag detection.
+
+### 3.5. Journaling Page
+*   **Description**: A digital journal for free-form reflection.
+*   **Key Capabilities**: Text entry with auto-save and initial sentiment tagging.
+
+### 3.6. History Page
+*   **Description**: A timeline of past interactions.
+*   **Key Capabilities**: Lists past journal entries and chat sessions. Features an AI generator that produces monthly and yearly summaries of the user's emotional journey.
+
+### 3.7. Analysis Page
+*   **Description**: Deep-dive analytics dashboard.
+*   **Key Capabilities**: Mood tracking charts, heatmaps, and correlation insights (e.g., sleep vs. stress).
+
+### 3.8. Crisis Speech (SOS System)
+*   **Description**: High-priority immediate help interface.
+*   **Key Capabilities**: Triggered automatically or manually, halts AI conversational generation, and provides immediate emergency contacts and coping mechanisms.
+
+### 3.9. Exercise Page
+*   **Description**: Dynamic self-care recommendations.
+*   **Key Capabilities**: Suggests breathing exercises, meditations, or grounding techniques based directly on the user's recent chatbot and journaling history.
 
 ---
 
