@@ -206,396 +206,440 @@ export default function RegisterPage() {
         </button>
       </nav>
 
-      {/* Main Content Area: Centered, Beautiful Glassmorphic layout */}
+      {/* Main Content Area: Split Two-Section Layout */}
       <main
         style={{
           flex: 1,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "40px 20px",
+          alignItems: "stretch",
           width: "100%",
+          position: "relative",
           zIndex: 10,
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            alignItems: "stretch",
-            gap: "32px",
-            width: "100%",
-            maxWidth: "1000px",
-          }}
-          className="auth-main-layout"
-        >
-          {/* Left Side: Premium Centered Glassmorphic Form Card */}
-          <div
-            className="glass-card"
-            style={{
-              flex: "1 1 450px",
-              maxWidth: "500px",
-              padding: "40px",
-              borderRadius: "24px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "24px",
-              backgroundColor: "var(--bg-surface)",
-              border: "1.5px solid var(--border-light)",
-              boxShadow: "var(--shadow-hover)",
-              transition: "transform 0.3s ease, box-shadow 0.3s ease",
-            }}
-          >
-            {/* Header section inside card */}
-            <div style={{ textAlign: "center" }}>
-              <h2
-                style={{
-                  fontSize: "32px",
-                  fontFamily: "var(--font-header)",
-                  marginBottom: "8px",
-                  fontWeight: "500",
+        <div className="split-layout-container">
+          {/* Left Column: Premium Form Card with peeking mascot */}
+          <div className="left-form-column">
+            <div style={{ position: "relative", width: "100%", maxWidth: "460px" }}>
+              {/* Peeking Waving Mascot Badge */}
+              <div 
+                style={{ 
+                  position: "absolute",
+                  top: "-70px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 20,
+                  pointerEvents: "auto",
                 }}
               >
-                Create Account
-              </h2>
-              <p
+                <Mascot
+                  pose="waving-hello"
+                  size={130}
+                  dialogue="Welcome! I'm Sparky, and I can't wait to walk this path of calm together with you."
+                  interactive={true}
+                />
+              </div>
+
+              {/* Centered Glassmorphic Form Card */}
+              <div
+                className="glass-card auth-login-card"
                 style={{
-                  color: "var(--text-secondary)",
-                  fontSize: "14.5px",
-                  lineHeight: "1.5",
+                  width: "100%",
+                  padding: "48px 40px",
+                  borderRadius: "28px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "24px",
+                  backgroundColor: "var(--bg-surface)",
+                  border: "1.5px solid var(--border-light)",
+                  boxShadow: "var(--shadow-hover)",
+                  marginTop: "30px", /* Make room for the peeking mascot */
                 }}
               >
-                Begin your path to mindfulness, calm reflection, and emotional balance today.
-              </p>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-              <div>
-                <label
-                  htmlFor="name"
-                  style={{
-                    display: "block",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    marginBottom: "8px",
-                    color: "var(--color-primary)",
-                    letterSpacing: "0.3px",
-                  }}
-                >
-                  Preferred Name
-                </label>
-                <div style={{ position: "relative" }}>
-                  <div
+                {/* Header section inside card */}
+                <div style={{ textAlign: "center", marginTop: "10px" }}>
+                  <h2
                     style={{
-                      position: "absolute",
-                      left: "16px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      display: "flex",
-                      alignItems: "center",
-                      pointerEvents: "none",
+                      fontSize: "30px",
+                      fontFamily: "var(--font-header)",
+                      marginBottom: "8px",
+                      fontWeight: "500",
+                      letterSpacing: "-0.5px",
                     }}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="var(--color-primary)"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ opacity: 0.8 }}
-                    >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </div>
-                  <input
-                    id="name"
-                    type="text"
-                    placeholder="Rishabh"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    Create Account
+                  </h2>
+                  <p
                     style={{
-                      height: "50px",
-                      borderRadius: "12px",
-                      paddingLeft: "48px",
-                      backgroundColor: "var(--bg-surface)",
-                      border: "1.5px solid var(--border-input)",
-                      color: "var(--text-primary)",
-                      width: "100%",
-                      fontSize: "15px",
-                      outline: "none",
-                      transition: "border-color 0.2s, box-shadow 0.2s",
+                      color: "var(--text-secondary)",
+                      fontSize: "14.5px",
+                      lineHeight: "1.5",
                     }}
-                    className="auth-input-field"
-                  />
+                  >
+                    Begin your path to mindfulness, calm reflection, and emotional balance today.
+                  </p>
                 </div>
-              </div>
 
-              <div>
-                <label
-                  htmlFor="email"
-                  style={{
-                    display: "block",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    marginBottom: "8px",
-                    color: "var(--color-primary)",
-                    letterSpacing: "0.3px",
-                  }}
-                >
-                  Email Address
-                </label>
-                <div style={{ position: "relative" }}>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: "16px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      display: "flex",
-                      alignItems: "center",
-                      pointerEvents: "none",
-                    }}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="var(--color-primary)"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ opacity: 0.8 }}
+                {/* Form */}
+                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                  <div>
+                    <label
+                      htmlFor="name"
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: "600",
+                        marginBottom: "8px",
+                        color: "var(--color-primary)",
+                        letterSpacing: "0.3px",
+                      }}
                     >
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                      <polyline points="22,6 12,13 2,6" />
-                    </svg>
+                      Preferred Name
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: "16px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          display: "flex",
+                          alignItems: "center",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="var(--color-primary)"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ opacity: 0.8 }}
+                        >
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </div>
+                      <input
+                        id="name"
+                        type="text"
+                        placeholder="Rishabh"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        style={{
+                          height: "50px",
+                          borderRadius: "14px",
+                          paddingLeft: "48px",
+                          backgroundColor: "var(--bg-surface)",
+                          border: "1.5px solid var(--border-input)",
+                          color: "var(--text-primary)",
+                          width: "100%",
+                          fontSize: "15px",
+                          outline: "none",
+                        }}
+                        className="auth-input-field"
+                      />
+                    </div>
                   </div>
-                  <input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    style={{
-                      height: "50px",
-                      borderRadius: "12px",
-                      paddingLeft: "48px",
-                      backgroundColor: "var(--bg-surface)",
-                      border: "1.5px solid var(--border-input)",
-                      color: "var(--text-primary)",
-                      width: "100%",
-                      fontSize: "15px",
-                      outline: "none",
-                      transition: "border-color 0.2s, box-shadow 0.2s",
-                    }}
-                    className="auth-input-field"
-                  />
-                </div>
-              </div>
 
-              <div>
-                <label
-                  htmlFor="password"
-                  style={{
-                    display: "block",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    marginBottom: "8px",
-                    color: "var(--color-primary)",
-                    letterSpacing: "0.3px",
-                  }}
-                >
-                  Password
-                </label>
-                <div style={{ position: "relative" }}>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: "16px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      display: "flex",
-                      alignItems: "center",
-                      pointerEvents: "none",
-                    }}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="var(--color-primary)"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ opacity: 0.8 }}
+                  <div>
+                    <label
+                      htmlFor="email"
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: "600",
+                        marginBottom: "8px",
+                        color: "var(--color-primary)",
+                        letterSpacing: "0.3px",
+                      }}
                     >
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
+                      Email Address
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: "16px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          display: "flex",
+                          alignItems: "center",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="var(--color-primary)"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ opacity: 0.8 }}
+                        >
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                          <polyline points="22,6 12,13 2,6" />
+                        </svg>
+                      </div>
+                      <input
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        style={{
+                          height: "50px",
+                          borderRadius: "14px",
+                          paddingLeft: "48px",
+                          backgroundColor: "var(--bg-surface)",
+                          border: "1.5px solid var(--border-input)",
+                          color: "var(--text-primary)",
+                          width: "100%",
+                          fontSize: "15px",
+                          outline: "none",
+                        }}
+                        className="auth-input-field"
+                      />
+                    </div>
                   </div>
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{
-                      height: "50px",
-                      borderRadius: "12px",
-                      paddingLeft: "48px",
-                      paddingRight: "48px",
-                      backgroundColor: "var(--bg-surface)",
-                      border: "1.5px solid var(--border-input)",
-                      color: "var(--text-primary)",
-                      width: "100%",
-                      fontSize: "15px",
-                      outline: "none",
-                      transition: "border-color 0.2s, box-shadow 0.2s",
-                    }}
-                    className="auth-input-field"
-                  />
+
+                  <div>
+                    <label
+                      htmlFor="password"
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: "600",
+                        marginBottom: "8px",
+                        color: "var(--color-primary)",
+                        letterSpacing: "0.3px",
+                      }}
+                    >
+                      Password
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: "16px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          display: "flex",
+                          alignItems: "center",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="var(--color-primary)"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ opacity: 0.8 }}
+                        >
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      </div>
+                      <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        style={{
+                          height: "50px",
+                          borderRadius: "14px",
+                          paddingLeft: "48px",
+                          paddingRight: "48px",
+                          backgroundColor: "var(--bg-surface)",
+                          border: "1.5px solid var(--border-input)",
+                          color: "var(--text-primary)",
+                          width: "100%",
+                          fontSize: "15px",
+                          outline: "none",
+                        }}
+                        className="auth-input-field"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{
+                          position: "absolute",
+                          right: "16px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        {showPassword ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="error-text animate-fade-in" style={{ padding: "12px 16px", borderRadius: "12px", backgroundColor: "rgba(192, 118, 90, 0.08)" }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      <span style={{ fontSize: "13.5px", fontWeight: "500", lineHeight: "1.4" }}>{error}</span>
+                    </div>
+                  )}
+
                   <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: "absolute",
-                      right: "16px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      padding: 0,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
+                    type="submit"
+                    className="btn-primary-auth"
+                    disabled={loading}
                   >
-                    {showPassword ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                        <line x1="1" y1="1" x2="23" y2="23" />
-                      </svg>
+                    {loading ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span className="spinner" />
+                        <span>Aligning Mind...</span>
+                      </div>
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
+                      <>
+                        <span>Agree & Register</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                          <polyline points="12 5 19 12 12 19" />
+                        </svg>
+                      </>
                     )}
                   </button>
+                </form>
+
+                {/* Alternate Option link */}
+                <div style={{ textAlign: "center", fontSize: "14.5px" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>Already have an account? </span>
+                  <Link href="/login" style={{ color: "var(--color-primary)", fontWeight: "600" }} className="auth-switch-link">
+                    Sign In
+                  </Link>
                 </div>
               </div>
-
-              {error && (
-                <div className="error-text" style={{ padding: "10px 14px", borderRadius: "10px", backgroundColor: "rgba(192, 118, 90, 0.08)" }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                className="btn-primary"
-                style={{
-                  height: "50px",
-                  borderRadius: "25px",
-                  fontSize: "15px",
-                  marginTop: "8px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "10px",
-                  fontWeight: "600",
-                  width: "100%",
-                }}
-                disabled={loading}
-              >
-                {loading ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span className="spinner" />
-                    <span>Aligning Mind...</span>
-                  </div>
-                ) : (
-                  <>
-                    <span>Agree & Register</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                      <polyline points="12 5 19 12 12 19" />
-                    </svg>
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Alternate Option link */}
-            <div style={{ textAlign: "center", fontSize: "14.5px" }}>
-              <span style={{ color: "var(--text-secondary)" }}>Already have an account? </span>
-              <Link href="/login" style={{ color: "var(--color-primary)", fontWeight: "600" }} className="auth-switch-link">
-                Sign In
-              </Link>
             </div>
           </div>
 
-          {/* Right Side: Interactive Mascot & Welcoming Aesthetic Panel */}
-          <div
-            className="glass-card"
-            style={{
-              flex: "1 1 350px",
-              maxWidth: "400px",
-              padding: "40px",
-              borderRadius: "24px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "var(--bg-surface)",
-              border: "1.5px solid var(--border-light)",
-              boxShadow: "var(--shadow-hover)",
-              textAlign: "center",
-              gap: "24px",
-            }}
-          >
-            {/* The Unified Mascot Component */}
-            <Mascot
-              pose="waving-hello"
-              size={200}
-              dialogue="Welcome! I'm Sparky, and I can't wait to be friends and walk this path of calm together."
-              interactive={true}
-            />
-
-            <div>
-              <h3 style={{ fontSize: "22px", fontFamily: "var(--font-header)", marginBottom: "8px", fontWeight: "500" }}>
-                We Listen Gently
-              </h3>
-              <p style={{ color: "var(--text-secondary)", fontSize: "14.5px", lineHeight: "1.6" }}>
-                No judgment, no pressure. Your pace is the perfect pace. Start your premium mental support dashboard today.
-              </p>
-            </div>
-
+          {/* Right Column: Interactive Journey Illustration Panel */}
+          <div className="right-illustration-column">
+            {/* Drifting subtle aura inside illustration container */}
             <div
               style={{
-                fontSize: "12px",
-                color: "var(--text-secondary)",
-                backgroundColor: "rgba(90, 148, 117, 0.08)",
-                padding: "8px 14px",
-                borderRadius: "20px",
-                fontWeight: "500",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
+                position: "absolute",
+                width: "400px",
+                height: "400px",
+                bottom: "10%",
+                left: "-50px",
+                background: "radial-gradient(circle, rgba(125, 170, 143, 0.12) 0%, rgba(0,0,0,0) 70%)",
+                filter: "blur(40px)",
+                pointerEvents: "none",
               }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 0 8.5C17 15 15 18 11 20z"/><path d="M19 2c-2.26 4.33-5.27 7.14-8 10"/></svg> Zero judgment. Absolute serenity.
+            />
+            
+            <div className="illustration-card-container">
+              {/* Header inside right panel */}
+              <div style={{ textAlign: "center", maxWidth: "520px", marginBottom: "16px" }}>
+                <h2 style={{ fontFamily: "var(--font-header)", fontSize: "28px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.5px" }}>
+                  Your SereneMind Companions
+                </h2>
+                <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: "1.5" }}>
+                  Meet Pandi, Ollie, Sparky, and Goldie. We are all standing right beside you on your path to mindfulness and peace.
+                </p>
+              </div>
+
+              {/* Overlapping Mascot Scene */}
+              <div className="mascots-scenic-platform">
+                {/* Visual wood/lawn ground platform deck */}
+                <div className="scenic-platform-base" />
+
+                {/* Fireflies / Calm drifting particles */}
+                <div className="firefly firefly-1" />
+                <div className="firefly firefly-2" />
+                <div className="firefly firefly-3" />
+                <div className="firefly firefly-4" />
+
+                {/* Pandi */}
+                <div className="scenic-mascot-wrapper mascot-pandi" style={{ marginRight: "-28px", zIndex: 11 }}>
+                  <div className="scenic-speech-bubble">
+                    "A single step is the start of a beautiful journey."
+                  </div>
+                  <img src="/mascot/pandi-pandi-yoga.svg" className="scenic-mascot-img" alt="Pandi" />
+                  <span className="scenic-mascot-label">Pandi</span>
+                </div>
+
+                {/* Ollie the Otter */}
+                <div className="scenic-mascot-wrapper mascot-otter" style={{ marginRight: "-22px", zIndex: 12 }}>
+                  <div className="scenic-speech-bubble">
+                    "Jump on! Let's roll forward into our new path."
+                  </div>
+                  <img src="/mascot/otter-otter-skateboard.svg" className="scenic-mascot-img" alt="Ollie" />
+                  <span className="scenic-mascot-label">Ollie</span>
+                </div>
+
+                {/* Sparky the Hamster */}
+                <div className="scenic-mascot-wrapper mascot-sparky" style={{ marginRight: "-28px", zIndex: 13 }}>
+                  <div className="scenic-speech-bubble">
+                    "Breathe with us. We are so excited you are starting!"
+                  </div>
+                  <img src="/mascot/golden-hamster-golden-hamster-sitting-zen.svg" className="scenic-mascot-img" alt="Sparky" />
+                  <span className="scenic-mascot-label">Sparky</span>
+                </div>
+
+                {/* Goldie the Pup */}
+                <div className="scenic-mascot-wrapper mascot-goldie" style={{ zIndex: 10 }}>
+                  <div className="scenic-speech-bubble">
+                    "Welcome to SereneMind! I'm here to cheer you on."
+                  </div>
+                  <img src="/mascot/goldie-goldie-greeting.svg" className="scenic-mascot-img" alt="Goldie" />
+                  <span className="scenic-mascot-label">Goldie</span>
+                </div>
+              </div>
+
+              {/* Glassmorphic Quotes overlay */}
+              <div className="quote-overlay-card" style={{ marginTop: "16px", width: "100%" }}>
+                <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: "1.6", fontStyle: "italic", margin: 0 }}>
+                  "A beautiful space built to understand, comfort, and guide you. Sparky and friends are so excited to meet you."
+                </p>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--text-secondary)",
+                    backgroundColor: "rgba(90, 148, 117, 0.08)",
+                    padding: "8px 16px",
+                    borderRadius: "20px",
+                    fontWeight: "500",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    marginTop: "14px",
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 0 8.5C17 15 15 18 11 20z"/><path d="M19 2c-2.26 4.33-5.27 7.14-8 10"/></svg> Zero judgment. Absolute Serenity.
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -631,15 +675,72 @@ export default function RegisterPage() {
           transform: translateY(0);
         }
         .auth-switch-link {
-          transition: color 0.2s ease;
+          color: var(--color-primary);
+          font-weight: 600;
+          text-decoration: none;
+          position: relative;
+          transition: color 0.3s ease;
+        }
+        .auth-switch-link::after {
+          content: '';
+          position: absolute;
+          width: 100%;
+          transform: scaleX(0);
+          height: 2px;
+          bottom: -2px;
+          left: 0;
+          background-color: var(--color-secondary);
+          transform-origin: bottom right;
+          transition: transform 0.25s ease-out;
         }
         .auth-switch-link:hover {
           color: var(--color-secondary) !important;
-          text-decoration: underline;
+        }
+        .auth-switch-link:hover::after {
+          transform: scaleX(1);
+          transform-origin: bottom left;
+        }
+        .auth-input-field {
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .auth-input-field:hover {
+          border-color: var(--color-primary);
+          opacity: 0.95;
         }
         .auth-input-field:focus {
           border-color: var(--color-primary) !important;
           box-shadow: 0 0 0 3px rgba(91, 127, 166, 0.15) !important;
+        }
+        .btn-primary-auth {
+          height: 50px;
+          border-radius: 25px;
+          font-size: 15px;
+          margin-top: 8px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          font-weight: 600;
+          width: 100%;
+          background-color: var(--color-primary);
+          color: #ffffff;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 4px 14px rgba(91, 127, 166, 0.25);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-primary-auth:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(91, 127, 166, 0.4);
+          background-color: var(--color-primary);
+          opacity: 0.96;
+        }
+        .btn-primary-auth:active:not(:disabled) {
+          transform: translateY(0) scale(0.98);
+        }
+        .btn-primary-auth:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
         .spinner {
           width: 18px;
@@ -657,9 +758,250 @@ export default function RegisterPage() {
         .bubble-2 { animation: float-bubble-2 20s ease-in-out infinite alternate; }
         @keyframes float-bubble-1 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(80px, -60px) scale(1.15); } }
         @keyframes float-bubble-2 { 0% { transform: translate(0, 0) scale(1.1); } 100% { transform: translate(-60px, 80px) scale(0.9); } }
+        
+        /* Two-section split styles */
+        .split-layout-container {
+          display: flex;
+          width: 100%;
+          min-height: calc(100vh - 89px);
+        }
+        .left-form-column {
+          flex: 1 1 50%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 60px 24px 40px;
+          z-index: 2;
+        }
+        .right-illustration-column {
+          flex: 1 1 50%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 40px;
+          position: relative;
+          background: linear-gradient(135deg, rgba(91, 127, 166, 0.12) 0%, rgba(125, 170, 143, 0.08) 100%);
+          border-left: 1px solid var(--border-light);
+          overflow: hidden;
+          z-index: 2;
+        }
+        .illustration-card-container {
+          width: 100%;
+          max-width: 580px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 36px;
+          transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .illustration-card-container:hover {
+          transform: translateY(-8px);
+        }
+        /* Scenic mascot platform styles */
+        .mascots-scenic-platform {
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          position: relative;
+          width: 100%;
+          max-width: 580px;
+          height: 280px;
+          padding-bottom: 30px;
+          margin-bottom: 15px;
+        }
+        .scenic-platform-base {
+          position: absolute;
+          bottom: 18px;
+          left: 5%;
+          right: 5%;
+          height: 48px;
+          border-radius: 50% / 20px;
+          background: linear-gradient(180deg, var(--bg-surface) 0%, var(--border-light) 100%);
+          box-shadow: 0 12px 28px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.1);
+          border: 1px solid var(--border-light);
+          z-index: 5;
+        }
+        html.dark .scenic-platform-base {
+          background: linear-gradient(180deg, rgba(42, 47, 56, 0.9) 0%, rgba(20, 22, 28, 0.9) 100%);
+          border-color: rgba(255,255,255,0.08);
+          box-shadow: 0 12px 28px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .scenic-mascot-wrapper {
+          position: relative;
+          cursor: pointer;
+          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 145px;
+          height: 185px;
+          z-index: 10;
+        }
+        .scenic-mascot-wrapper:hover {
+          transform: scale(1.18) translateY(-14px);
+          z-index: 30 !important;
+        }
+        .scenic-mascot-img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.05));
+          transition: filter 0.3s ease;
+        }
+        .scenic-mascot-wrapper:hover .scenic-mascot-img {
+          filter: drop-shadow(0 12px 24px rgba(91, 127, 166, 0.3)) drop-shadow(0 0 12px rgba(167, 139, 250, 0.25));
+        }
+        .scenic-speech-bubble {
+          position: absolute;
+          bottom: 195px;
+          background-color: rgba(18, 19, 38, 0.95);
+          color: #EAE8E3;
+          padding: 10px 14px;
+          border-radius: 16px;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 0 0 15px rgba(167, 139, 250, 0.15);
+          border: 1px solid rgba(167, 139, 250, 0.35);
+          font-size: 11px;
+          font-weight: 500;
+          width: 170px;
+          text-align: center;
+          pointer-events: none;
+          opacity: 0;
+          transform: translateY(8px);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          z-index: 40;
+          backdrop-filter: blur(8px);
+          line-height: 1.4;
+        }
+        .scenic-speech-bubble::after {
+          content: '';
+          position: absolute;
+          bottom: -6px;
+          left: 50%;
+          transform: translateX(-50%) rotate(45deg);
+          width: 10px;
+          height: 10px;
+          background-color: rgba(18, 19, 38, 0.95);
+          border-right: 1px solid rgba(167, 139, 250, 0.35);
+          border-bottom: 1px solid rgba(167, 139, 250, 0.35);
+        }
+        .scenic-mascot-wrapper:hover .scenic-speech-bubble {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .scenic-mascot-label {
+          position: absolute;
+          bottom: -22px;
+          background-color: var(--bg-surface);
+          color: var(--text-secondary);
+          border: 1px solid var(--border-light);
+          padding: 2px 10px;
+          border-radius: 20px;
+          font-size: 9.5px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+          transition: all 0.3s ease;
+          opacity: 0.8;
+          text-transform: uppercase;
+        }
+        .scenic-mascot-wrapper:hover .scenic-mascot-label {
+          opacity: 1;
+          color: var(--color-primary);
+          border-color: var(--color-primary);
+          box-shadow: 0 4px 10px rgba(91, 127, 166, 0.1);
+        }
+        
+        /* Drifting Fireflies */
+        .firefly {
+          position: absolute;
+          width: 6px;
+          height: 6px;
+          background-color: rgba(167, 139, 250, 0.5);
+          border-radius: 50%;
+          filter: blur(1px);
+          pointer-events: none;
+          box-shadow: 0 0 10px rgba(167, 139, 250, 0.8), 0 0 20px rgba(167, 139, 250, 0.4);
+          z-index: 6;
+        }
+        .firefly-1 {
+          top: 10%;
+          left: 20%;
+          animation: drift-firefly-1 18s ease-in-out infinite;
+        }
+        .firefly-2 {
+          top: 30%;
+          right: 15%;
+          animation: drift-firefly-2 15s ease-in-out infinite;
+        }
+        .firefly-3 {
+          bottom: 25%;
+          left: 30%;
+          animation: drift-firefly-3 20s ease-in-out infinite;
+        }
+        .firefly-4 {
+          top: 50%;
+          left: 45%;
+          animation: drift-firefly-1 22s ease-in-out infinite alternate;
+        }
+        @keyframes drift-firefly-1 {
+          0% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+          50% { transform: translate(30px, -40px) scale(1.5); opacity: 0.9; }
+          100% { transform: translate(-20px, -80px) scale(1); opacity: 0.3; }
+        }
+        @keyframes drift-firefly-2 {
+          0% { transform: translate(0, 0) scale(1.2); opacity: 0.8; }
+          50% { transform: translate(-50px, -20px) scale(0.8); opacity: 0.2; }
+          100% { transform: translate(10px, -60px) scale(1.2); opacity: 0.8; }
+        }
+        @keyframes drift-firefly-3 {
+          0% { transform: translate(0, 0) scale(0.8); opacity: 0.2; }
+          50% { transform: translate(40px, -30px) scale(1.4); opacity: 0.9; }
+          100% { transform: translate(-10px, -10px) scale(0.8); opacity: 0.2; }
+        }
+
+        .quote-overlay-card {
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border-radius: 20px;
+          padding: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.45);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+          text-align: center;
+        }
+        html.dark .quote-overlay-card {
+          background: rgba(42, 47, 56, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile Responsive adjustments */
+        @media (max-width: 1023px) {
+          .right-illustration-column {
+            display: none;
+          }
+          .left-form-column {
+            flex: 1 1 100%;
+            padding: 80px 16px 40px;
+          }
+          .split-layout-container {
+            min-height: calc(100vh - 89px);
+          }
+        }
       `}</style>
     </div>
   );
 }
+
 
 
