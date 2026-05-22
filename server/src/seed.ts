@@ -3,9 +3,9 @@ import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 
 async function seed() {
-  console.log("🌱 Seeding SereneMind PostgreSQL database...");
+  console.log("[Seed] Seeding SereneMind PostgreSQL database...");
   if (!pool) {
-    console.error("❌ PostgreSQL pool is not configured! Check DATABASE_URL.");
+    console.error("[Seed Error] PostgreSQL pool is not configured! Check DATABASE_URL.");
     process.exit(1);
   }
 
@@ -16,7 +16,7 @@ async function seed() {
     const passwordHash = bcrypt.hashSync(password, 12);
     const displayName = "Ranjeet choudhary";
 
-    console.log("➡️ Seeding default user...");
+    console.log("[Seed Info] Seeding default user...");
     const userResult = await pool.query(
       `INSERT INTO users (email, password_hash, display_name)
        VALUES ($1, $2, $3)
@@ -28,10 +28,10 @@ async function seed() {
     );
 
     const userId = userResult.rows[0].id;
-    console.log(`✅ Seeded user: ${email} (ID: ${userId})`);
+    console.log(`[Seed Success] Seeded user: ${email} (ID: ${userId})`);
 
     // 2. Adopted Mascot (Sparky)
-    console.log("➡️ Seeding mascot companion...");
+    console.log("[Seed Info] Seeding mascot companion...");
     await pool.query(
       `INSERT INTO mascots (user_id, name, egg_type, personality, level)
        VALUES ($1, $2, $3, $4, $5)
@@ -42,10 +42,10 @@ async function seed() {
          level = EXCLUDED.level`,
       [userId, "Goldie", "Moss Sage Egg", "Calming & Stoic", 2]
     );
-    console.log("✅ Seeded mascot companion.");
+    console.log("[Seed Success] Seeded mascot companion.");
 
     // 3. User Demographics Profile
-    console.log("➡️ Seeding user demographics profile...");
+    console.log("[Seed Info] Seeding user demographics profile...");
     const triggers = [
       "Academic Pressure",
       "Social Anxiety",
@@ -79,10 +79,10 @@ async function seed() {
         "5-8 Hours", "Neutral Connection", "Light Walking / Yoga"
       ]
     );
-    console.log("✅ Seeded demographics profile.");
+    console.log("[Seed Success] Seeded demographics profile.");
 
     // 4. Clinical Cohort Persona
-    console.log("➡️ Seeding system matched cohort persona...");
+    console.log("[Seed Info] Seeding system matched cohort persona...");
     await pool.query(
       `INSERT INTO user_personas (
          user_id, persona_name, assigned_by, description, ai_behavior_prompt
@@ -100,10 +100,10 @@ async function seed() {
         "Respond as an empathetic, academic-mindful mentor. Focus on study-life boundaries, micro-breaks, box breathing, and lowering self-imposed academic pressure."
       ]
     );
-    console.log("✅ Seeded system matched cohort persona.");
+    console.log("[Seed Success] Seeded system matched cohort persona.");
 
     // Clear previous logs to avoid duplicates or overlapping data
-    console.log("🧹 Cleaning old telemetry logs for a clean slate...");
+    console.log("[Seed Info] Cleaning old telemetry logs for a clean slate...");
     await pool.query("DELETE FROM mood_logs WHERE user_id = $1", [userId]);
     await pool.query("DELETE FROM journals WHERE user_id = $1", [userId]);
     await pool.query("DELETE FROM chat_messages WHERE user_id = $1", [userId]);
@@ -112,7 +112,7 @@ async function seed() {
     await pool.query("DELETE FROM mood_calendar WHERE user_id = $1", [userId]);
 
     // 5. Seed mood check-ins (5 days logs)
-    console.log("➡️ Seeding mood check-in records...");
+    console.log("[Seed Info] Seeding mood check-in records...");
     const moodEntries = [
       { mood: "Calm", score: 8, notes: "Practiced grounding before morning exams.", offsetDays: 4 },
       { mood: "Content", score: 7, notes: "Completed homework deadlines early.", offsetDays: 3 },
@@ -139,10 +139,10 @@ async function seed() {
         [userId, "mood", `Mood Logged: ${m.mood}`, m.notes, m.score >= 7 ? "Positive" : m.score >= 5 ? "Neutral" : "Anxious", logRes.rows[0].id, logDate]
       );
     }
-    console.log("✅ Seeded mood check-in records.");
+    console.log("[Seed Success] Seeded mood check-in records.");
 
     // 6. Seed journals
-    console.log("➡️ Seeding journaling entries...");
+    console.log("[Seed Info] Seeding journaling entries...");
     const journalEntries = [
       {
         title: "Reflections on Autonomic Pacing",
@@ -182,10 +182,10 @@ async function seed() {
         [userId, "journal", j.title, j.body.substring(0, 100) + "...", j.sentiment, logRes.rows[0].id, logDate]
       );
     }
-    console.log("✅ Seeded journaling entries.");
+    console.log("[Seed Success] Seeded journaling entries.");
 
     // 7. Seed Chat Messages
-    console.log("➡️ Seeding chat conversation history...");
+    console.log("[Seed Info] Seeding chat conversation history...");
     const sessionId = uuidv4();
     const chatDate = new Date();
     chatDate.setDate(chatDate.getDate() - 1); // Yesterday
@@ -212,10 +212,10 @@ async function seed() {
        VALUES ($1, $2, $3, $4, $5, $6)`,
       [userId, "chat", "Companion chat with Goldie", `Vent details: "${conversation[0].text}"`, "Stressed", chatDate]
     );
-    console.log("✅ Seeded chat conversation history.");
+    console.log("[Seed Success] Seeded chat conversation history.");
 
     // 8. Seed Exercise logs
-    console.log("➡️ Seeding completed wellness exercises...");
+    console.log("[Seed Info] Seeding completed wellness exercises...");
     const exercises = [
       { exerciseId: "1", title: "4-Minute Box Breathing Reset", category: "calming", durationSecs: 240, offsetDays: 4 },
       { exerciseId: "2", title: "Progressive Muscle Relaxation (PMR)", category: "release", durationSecs: 180, offsetDays: 3 },
@@ -240,10 +240,10 @@ async function seed() {
         [userId, "exercise", ex.title, `Completed ${Math.floor(ex.durationSecs / 60)}m ${ex.category} practice successfully.`, "Positive", logRes.rows[0].id, logDate]
       );
     }
-    console.log("✅ Seeded completed wellness exercises.");
+    console.log("[Seed Success] Seeded completed wellness exercises.");
 
     // 9. Seed Mood Heatmap Calendar
-    console.log("➡️ Seeding monthly mood calendar heatmap...");
+    console.log("[Seed Info] Seeding monthly mood calendar heatmap...");
     const currentMonth = new Date().getMonth() + 1;
     const currentYear = new Date().getFullYear();
 
@@ -267,12 +267,12 @@ async function seed() {
         [userId, d.day, currentMonth, currentYear, d.mood, d.note]
       );
     }
-    console.log("✅ Seeded monthly mood calendar heatmap.");
+    console.log("[Seed Success] Seeded monthly mood calendar heatmap.");
 
-    console.log("🌱 Database seeding completed successfully!");
+    console.log("[Seed Success] Database seeding completed successfully!");
     process.exit(0);
   } catch (err) {
-    console.error("❌ Critical seeding failure:", err);
+    console.error("[Seed Error] Critical seeding failure:", err);
     process.exit(1);
   }
 }

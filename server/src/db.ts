@@ -17,16 +17,16 @@ if (process.env.DATABASE_URL) {
   });
 
   pool.on("error", (err) => {
-    console.error("❌ Unexpected PostgreSQL pool error:", err.message);
+    console.error("[DB Error] Unexpected PostgreSQL pool error:", err.message);
   });
 }
 
 // Test connection on startup
 export async function testConnection(): Promise<void> {
   if (!pool) {
-    console.warn("⚠️  Running in development mode without database connection");
+    console.warn("[DB Warning] Running in development mode without database connection");
     isDevelopmentMode = true;
-    console.log("✅ Development mode initialized (mock responses enabled)");
+    console.log("[DB Info] Development mode initialized (mock responses enabled)");
     return;
   }
 
@@ -42,7 +42,7 @@ export async function testConnection(): Promise<void> {
     `);
     
     if (checkOldPersonaTable.rows.length > 0) {
-      console.log("⚠️ Found old user_personas table. Migrating to separate user_profiles and user_personas schema...");
+      console.log("[DB Warning] Found old user_personas table. Migrating to separate user_profiles and user_personas schema...");
       await client.query("DROP TABLE IF EXISTS user_personas CASCADE");
     }
 
@@ -98,9 +98,9 @@ export async function testConnection(): Promise<void> {
     `);
 
     client.release();
-    console.log("✅ PostgreSQL connected successfully & profiles/personas schemas verified.");
+    console.log("[DB Success] PostgreSQL connected successfully & profiles/personas schemas verified.");
   } catch (err) {
-    console.warn("⚠️  PostgreSQL connection failed, falling back to development mode:", err);
+    console.warn("[DB Warning] PostgreSQL connection failed, falling back to development mode:", err);
     console.warn("   Run: docker-compose up -d");
     console.log("   Then: npm run dev");
     isDevelopmentMode = true;

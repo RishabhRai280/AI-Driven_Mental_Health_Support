@@ -312,7 +312,7 @@ export default function ChatbotPage() {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "24px" }}>⚠️</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-error)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               <div>
                 <h4 style={{ fontSize: "15px", fontWeight: "600", color: "var(--color-error)" }}>
                   Distress Safety Takeover Alert
@@ -515,7 +515,7 @@ export default function ChatbotPage() {
               className="btn-secondary"
               style={{ padding: "8px", fontSize: "12px", borderRadius: "12px" }}
             >
-              🧘 Zen
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", marginRight: "6px", verticalAlign: "middle" }}><path d="M12 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/><path d="M12 12a6 6 0 0 0-6 6v3h12v-3a6 6 0 0 0-6-6z"/></svg>Zen
             </button>
             <button
               onClick={() => {
@@ -525,7 +525,7 @@ export default function ChatbotPage() {
               className="btn-secondary"
               style={{ padding: "8px", fontSize: "12px", borderRadius: "12px" }}
             >
-              🎉 Happy
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", marginRight: "6px", verticalAlign: "middle" }}><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Happy
             </button>
             <button
               onClick={() => {
@@ -535,7 +535,7 @@ export default function ChatbotPage() {
               className="btn-secondary"
               style={{ padding: "8px", fontSize: "12px", borderRadius: "12px" }}
             >
-              🧠 Thoughtful
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", marginRight: "6px", verticalAlign: "middle" }}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-4.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-4.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2z"/></svg>Thoughtful
             </button>
             <button
               onClick={() => {
@@ -545,7 +545,7 @@ export default function ChatbotPage() {
               className="btn-secondary"
               style={{ padding: "8px", fontSize: "12px", borderRadius: "12px" }}
             >
-              💤 Resting
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", marginRight: "6px", verticalAlign: "middle" }}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>Resting
             </button>
           </div>
         </div>

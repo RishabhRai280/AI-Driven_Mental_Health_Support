@@ -595,7 +595,7 @@ export default function RegisterPage() {
                 gap: "6px",
               }}
             >
-              <span>🌱</span> Zero judgment. Absolute serenity.
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 0 8.5C17 15 15 18 11 20z"/><path d="M19 2c-2.26 4.33-5.27 7.14-8 10"/></svg> Zero judgment. Absolute serenity.
             </div>
           </div>
         </div>

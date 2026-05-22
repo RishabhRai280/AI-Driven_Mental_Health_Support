@@ -22,7 +22,7 @@ This wireframe details the structural, interactive, and player specifications fo
 |                      |                                                                                  |
 |  SIDEBAR NAV         |  A. RECOMMENDATION BANNER (Glass card with soft Sage Mist tint)                  |
 |  (Width: 280px)      |  +----------------------------------------------------------------------------+  |
-|                      |  | 🌟 Recommendation based on your journals: Box Breathing (5 Mins)            |  |
+|                      |  | Recommendation based on your journals: Box Breathing (5 Mins)            |  |
 |  [Home/Dashboard]    |  | "Try this grounding Box Breathing to lower stress."   [Begin Now (Pill)]   |  |
 |  [Chatbot Companion] |  +----------------------------------------------------------------------------+  |
 |  [Journaling]        |                                                                                  |
@@ -59,7 +59,7 @@ This wireframe details the structural, interactive, and player specifications fo
 ### B. Dynamic Onboarding Recommendation Banner
 * **Card Style**: Glass card structure with soft psychological tints. `display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; border-radius: 24px; border: 1.5px solid rgba(125, 170, 143, 0.4); background: rgba(125, 170, 143, 0.08) (8% Sage Mist opacity);`.
 * **Content Layout**: `display: flex; flex-direction: column; gap: 6px; max-width: 70%;`.
-  * Highlight Label: `"🌟 Recommended For You Today"`, `font-size: 13px; font-weight: 500; text-transform: uppercase; color: var(--color-secondary) (#7DAA8F);`.
+  * Highlight Label: `"Recommended For You Today"`, `font-size: 13px; font-weight: 500; text-transform: uppercase; color: var(--color-secondary) (#7DAA8F);`.
   * Banner Title: `"Box Breathing (5 Mins)"`, `font-size: 20px; font-weight: 500; color: var(--text-primary);`.
   * Supporting Text: `"Based on your evening journal logs indicating elevated stress, we suggest a quick Box Breathing routine to anchor your awareness."`, `font-size: 14px; line-height: 1.5; color: var(--text-secondary);`.
 * **Action Call-to-action Button**:

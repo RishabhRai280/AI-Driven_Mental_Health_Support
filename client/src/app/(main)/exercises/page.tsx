@@ -381,7 +381,7 @@ export default function ExercisePage() {
     // Cheer excitedly when a new custom habit is set
     setCompanionPose("running-excited");
     setCompanionDialogue(
-      `A new goal! "${newHabit.label}" is set. Let's conquer it together! 💪`,
+      `A new goal! "${newHabit.label}" is set. Let's conquer it together!`,
     );
     setTimeout(() => {
       setCompanionPose("sitting-zen");
@@ -435,7 +435,7 @@ export default function ExercisePage() {
       // Make the companion cheer and celebrate on checkoff!
       setCompanionPose("celebrating-success");
       setCompanionDialogue(
-        `Amazing! You completed "${habitLabel}"! Proud of you! 🎉`,
+        `Amazing! You completed "${habitLabel}"! Proud of you!`,
       );
       setTimeout(() => {
         setCompanionPose("sitting-zen");
@@ -505,7 +505,7 @@ export default function ExercisePage() {
     // React statefully to custom edits
     setCompanionPose("thinking-deeply");
     setCompanionDialogue(
-      `Goal refined to "${editLabel}"! Clarity is wisdom! 🧠`,
+      `Goal refined to "${editLabel}"! Clarity is wisdom!`,
     );
     setTimeout(() => {
       setCompanionPose("sitting-zen");
@@ -729,7 +729,7 @@ export default function ExercisePage() {
             boxShadow: "0 8px 32px rgba(90, 148, 117, 0.12)",
           }}
         >
-          <div style={{ fontSize: "28px" }}>🏆</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", verticalAlign: "middle" }}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"/><path d="M12 2a6 6 0 0 1 6 6v5a6 6 0 0 1-6 6 6 6 0 0 1-6-6V8a6 6 0 0 1 6-6z"/></svg>
           <div style={{ flex: 1 }}>
             <h4
               style={{
@@ -880,9 +880,12 @@ export default function ExercisePage() {
                   fontSize: "14px",
                   fontWeight: "700",
                   color: "var(--color-primary)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                ✨ Custom Habit Builder
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z"/></svg> Custom Habit Builder
               </h4>
               <div
                 style={{ display: "flex", flexDirection: "column", gap: "6px" }}

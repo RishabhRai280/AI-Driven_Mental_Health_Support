@@ -57,8 +57,8 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 async function bootstrap() {
   await testConnection();
   app.listen(PORT, () => {
-    console.log(`\n🚀 SereneMind API running at http://localhost:${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/health\n`);
+    console.log(`\n[API] SereneMind API running at http://localhost:${PORT}`);
+    console.log(`[Health] Health check: http://localhost:${PORT}/health\n`);
   });
 }
 

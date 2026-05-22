@@ -71,7 +71,12 @@ export default function AuthenticatedLayout({
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--background)" }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "40px", marginBottom: "16px" }}>🌀</div>
+          <div style={{ marginBottom: "16px", display: "flex", justifyContent: "center" }}>
+            <svg className="animate-spin-custom" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="3" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10" stroke="var(--border-light)" strokeWidth="3" opacity="0.3" />
+              <path d="M12 2a10 10 0 0 1 10 10" />
+            </svg>
+          </div>
           <p style={{ color: "var(--text-secondary)" }}>Loading your space...</p>
         </div>
       </div>
@@ -94,13 +99,21 @@ export default function AuthenticatedLayout({
           justifyContent: "center",
           alignItems: "center",
           padding: "24px",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
+        {/* Ambient background glow spheres */}
+        <div className="ambient-glow ambient-glow-1" />
+        <div className="ambient-glow ambient-glow-2" />
+        <div className="ambient-glow ambient-glow-3" />
         <main
           style={{
             maxWidth: "800px",
             width: "100%",
             margin: "0 auto",
+            position: "relative",
+            zIndex: 2,
           }}
         >
           {children}
@@ -123,8 +136,14 @@ export default function AuthenticatedLayout({
         minHeight: "100vh",
         backgroundColor: "var(--background)",
         color: "var(--text-primary)",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
+      {/* Ambient background glow spheres */}
+      <div className="ambient-glow ambient-glow-1" />
+      <div className="ambient-glow ambient-glow-2" />
+      <div className="ambient-glow ambient-glow-3" />
       {/* Universal Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
