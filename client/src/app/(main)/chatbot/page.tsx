@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Mascot, { HamsterPose } from "../../components/Mascot";
 import { api, ChatMessage } from "../../lib/api";
-import { v4 as uuidv4 } from "uuid";
 
 interface Message {
   id: string;
@@ -14,7 +13,7 @@ interface Message {
 }
 
 export default function ChatbotPage() {
-  const [sessionId] = useState(() => uuidv4());
+  const [sessionId] = useState(() => Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",

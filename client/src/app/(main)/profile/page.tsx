@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Mascot, { HamsterPose } from "../../components/Mascot";
+import { useAuth } from "../../context/AuthContext";
+import { api, MascotData, PersonaData } from "../../lib/api";
 
 interface UserPersona {
   age: string;
   occupation: string;
   sleepHours: string;
   stressLevel: number;
-   triggers: string[];
+  triggers: string[];
   selfCareScale: number;
   mentalGoal: string;
 }
@@ -18,39 +20,49 @@ interface AdoptedMascot {
   eggType: string;
   initialPersonality: string;
   level: number;
-  xp: number;
 }
 
 const AVATARS = [
-  { id: "bird", emoji: "🐦", label: "Calm Serene Bird", bg: "rgba(91, 127, 166, 0.12)" },
-  { id: "hamster", emoji: "🐹", label: "Happy Hamster", bg: "rgba(125, 170, 143, 0.12)" },
-  { id: "koala", emoji: "🐨", label: "Zen Koala", bg: "rgba(169, 146, 196, 0.12)" },
-  { id: "cheetah", emoji: "🐆", label: "Motivated Cheetah", bg: "rgba(192, 118, 90, 0.12)" },
+  { id: "bird", label: "Calm Serene Bird", initials: "SB", bg: "rgba(91, 127, 166, 0.9)" },
+  { id: "hamster", label: "Happy Hamster", initials: "RC", bg: "rgba(125, 170, 143, 0.9)" },
+  { id: "koala", label: "Zen Koala", initials: "ZK", bg: "rgba(169, 146, 196, 0.9)" },
+  { id: "cheetah", label: "Motivated Cheetah", initials: "MC", bg: "rgba(192, 118, 90, 0.9)" },
 ];
 
 export default function ProfilePage() {
+  const { user } = useAuth();
+
   const [activeAvatar, setActiveAvatar] = useState("hamster");
   const [persona, setPersona] = useState<UserPersona>({
     age: "24",
     occupation: "Student / Developer",
     sleepHours: "7-8 hours",
-    stressLevel: 6,
+    stressLevel: 5,
     triggers: ["Academic Pressure", "General Worries"],
-    selfCareScale: 7,
+    selfCareScale: 6,
     mentalGoal: "Achieve Calmer Baselines",
   });
 
   const [mascot, setMascot] = useState<AdoptedMascot | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [dbLogs, setDbLogs] = useState<any[]>([]);
 
   // Form Temp State
   const [tempAge, setTempAge] = useState("");
   const [tempOccupation, setTempOccupation] = useState("");
   const [tempSleepHours, setTempSleepHours] = useState("");
-  const [tempStress, setTempStress] = useState(5);
-  const [tempSelfCare, setTempSelfCare] = useState(5);
   const [tempGoal, setTempGoal] = useState("");
   const [tempTriggers, setTempTriggers] = useState<string[]>([]);
+
+  // Interactive diagnostic questionnaire states (choices 0 to 3)
+  const [stressAnswers, setStressAnswers] = useState<number[]>([1, 1, 1, 1]);
+  const [careAnswers, setCareAnswers] = useState<number[]>([2, 1, 1, 1]);
+
+  // Additional parameters temp state
+  const [waterIntake, setWaterIntake] = useState("1-2 Liters");
+  const [screenTime, setScreenTime] = useState("5-8 Hours");
+  const [socialContext, setSocialContext] = useState("Neutral Connection");
+  const [physicalActivity, setPhysicalActivity] = useState("Light Walking / Yoga");
 
   const availableTriggers = [
     "Academic Pressure",
@@ -61,68 +73,141 @@ export default function ProfilePage() {
     "General Worries",
   ];
 
-  // Load profile and mascot states from localStorage
+  // Load profile and mascot states directly from DB
   useEffect(() => {
-    // 1. Load Persona
-    const savedPersona = localStorage.getItem("user-persona");
-    if (savedPersona) {
+    async function loadDBProfile() {
       try {
-        const parsed = JSON.parse(savedPersona);
-        setPersona(parsed);
+        const data = await api.get<{ mascot: MascotData | null; persona: PersonaData | null }>("/api/mascot");
+        
+        if (data.persona) {
+          // Parse dynamic tags from triggers
+          const triggersList = data.persona.triggers || [];
+          setPersona({
+            age: String(data.persona.age),
+            occupation: data.persona.occupation,
+            sleepHours: data.persona.sleepHours,
+            stressLevel: data.persona.stressLevel,
+            selfCareScale: data.persona.selfCareScale,
+            mentalGoal: data.persona.mentalGoal,
+            triggers: triggersList,
+          });
+
+          // Set temp state default
+          setTempAge(String(data.persona.age));
+          setTempOccupation(data.persona.occupation);
+          setTempSleepHours(data.persona.sleepHours);
+          setTempGoal(data.persona.mentalGoal);
+          
+          // Parse water, screen time, social context, physical activity
+          const water = triggersList.find(t => t.startsWith("water:"))?.replace("water:", "") || "1-2 Liters";
+          const screen = triggersList.find(t => t.startsWith("screentime:"))?.replace("screentime:", "") || "5-8 Hours";
+          const social = triggersList.find(t => t.startsWith("social:"))?.replace("social:", "") || "Neutral Connection";
+          const activity = triggersList.find(t => t.startsWith("activity:"))?.replace("activity:", "") || "Light Walking / Yoga";
+          
+          setWaterIntake(water);
+          setScreenTime(screen);
+          setSocialContext(social);
+          setPhysicalActivity(activity);
+
+          // Clean triggers (filter out composite parameters)
+          const baseTriggers = triggersList.filter(t => !t.startsWith("water:") && !t.startsWith("screentime:") && !t.startsWith("social:") && !t.startsWith("activity:"));
+          setTempTriggers(baseTriggers);
+        }
+
+        if (data.mascot) {
+          setMascot({
+            name: data.mascot.name,
+            eggType: data.mascot.eggType,
+            initialPersonality: data.mascot.personality,
+            level: data.mascot.level,
+          });
+        }
+
+        // Fetch wellness logs directly from DB to calculate evolution status
+        const logsData = await api.get<{ logs: any[] }>("/api/wellness");
+        setDbLogs(logsData.logs || []);
       } catch (e) {
-        console.error(e);
+        console.error("Failed to load user credentials profile:", e);
       }
     }
+    loadDBProfile();
 
-    // 2. Load Avatar
     const savedAvatar = localStorage.getItem("user-avatar");
     if (savedAvatar) {
       setActiveAvatar(savedAvatar);
     }
-
-    // 3. Load Mascot
-    const savedMascot = localStorage.getItem("adopted-mascot");
-    if (savedMascot) {
-      try {
-        setMascot(JSON.parse(savedMascot));
-      } catch (e) {
-        console.error(e);
-      }
-    }
   }, []);
+
+  // Calculated dynamic levels
+  const calculatedStress = useMemo(() => {
+    const sum = stressAnswers.reduce((a, b) => a + b, 0);
+    return Math.max(1, Math.min(10, Math.round((sum / 12) * 9) + 1));
+  }, [stressAnswers]);
+
+  const calculatedSelfCare = useMemo(() => {
+    const sum = careAnswers.reduce((a, b) => a + b, 0);
+    return Math.max(1, Math.min(10, Math.round((sum / 12) * 9) + 1));
+  }, [careAnswers]);
 
   const handleEditClick = () => {
     setTempAge(persona.age);
     setTempOccupation(persona.occupation);
     setTempSleepHours(persona.sleepHours);
-    setTempStress(persona.stressLevel);
-    setTempSelfCare(persona.selfCareScale);
     setTempGoal(persona.mentalGoal);
-    setTempTriggers([...persona.triggers]);
+    
+    const baseTriggers = persona.triggers.filter(t => !t.startsWith("water:") && !t.startsWith("screentime:") && !t.startsWith("social:") && !t.startsWith("activity:"));
+    setTempTriggers(baseTriggers);
+    
     setIsEditing(true);
   };
 
-  const handleSavePersona = (e: React.FormEvent) => {
+  const handleSavePersona = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Embed diagnostic telemetry parameters cleanly into triggers array
+    const compositeTriggers = [
+      ...tempTriggers,
+      `water:${waterIntake}`,
+      `screentime:${screenTime}`,
+      `social:${socialContext}`,
+      `activity:${physicalActivity}`,
+    ];
+
     const updated: UserPersona = {
       age: tempAge,
       occupation: tempOccupation,
       sleepHours: tempSleepHours,
-      stressLevel: tempStress,
-      triggers: tempTriggers,
-      selfCareScale: tempSelfCare,
+      stressLevel: calculatedStress,
+      triggers: compositeTriggers,
+      selfCareScale: calculatedSelfCare,
       mentalGoal: tempGoal,
     };
 
-    setPersona(updated);
-    localStorage.setItem("user-persona", JSON.stringify(updated));
-    setIsEditing(false);
-    alert("Your SereneMind Mental Health Persona has been updated successfully!");
+    try {
+      await api.post("/api/mascot/persona", {
+        age: parseInt(tempAge),
+        occupation: tempOccupation,
+        sleepHours: tempSleepHours,
+        stressLevel: calculatedStress,
+        selfCareScale: calculatedSelfCare,
+        mentalGoal: tempGoal,
+        triggers: compositeTriggers,
+      });
+
+      setPersona(updated);
+      setIsEditing(false);
+      alert("Your SereneMind Mental Health Persona has been successfully updated in the PostgreSQL database!");
+    } catch (err) {
+      console.error("Failed to save persona:", err);
+      alert("Could not update profile in the database. Please try again.");
+    }
   };
 
   const handleAvatarChange = (avatarId: string) => {
     setActiveAvatar(avatarId);
     localStorage.setItem("user-avatar", avatarId);
+    // Dispatches storage event so Header component re-evaluates avatar initials background color
+    window.dispatchEvent(new Event("storage"));
   };
 
   const toggleTrigger = (trigger: string) => {
@@ -133,28 +218,14 @@ export default function ProfilePage() {
     }
   };
 
-  // Behavior evolution engine based on logs
+  // Behavior evolution engine based on real DB logs
   const mascotEvolution = useMemo(() => {
     if (!mascot) return { level: 1, title: "Hatchling Bond", state: "Calm Observer", pose: "waving-hello" as HamsterPose, desc: "Still getting to know your habits." };
 
-    // Fetch unified logs
-    const savedLogs = localStorage.getItem("wellness-logs");
-    let logsCount = 0;
-    let positiveCount = 0;
-    let stressedCount = 0;
+    const logsCount = dbLogs.length;
+    const positiveCount = dbLogs.filter((l: any) => l.sentiment === "Positive").length;
+    const stressedCount = dbLogs.filter((l: any) => l.sentiment === "Stressed" || l.sentiment === "Anxious").length;
 
-    if (savedLogs) {
-      try {
-        const parsed = JSON.parse(savedLogs);
-        logsCount = parsed.length;
-        positiveCount = parsed.filter((l: any) => l.sentiment === "Positive").length;
-        stressedCount = parsed.filter((l: any) => l.sentiment === "Stressed" || l.sentiment === "Anxious").length;
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    // Dynamic level upgrades
     let currentLevel = 1;
     let title = "Mindful Hatchling";
     let state = "Gentle Observer";
@@ -175,7 +246,6 @@ export default function ProfilePage() {
       desc = "Upgraded to Level 2! Actively pacing anxiety sparks with you.";
     }
 
-    // Stress adaptive state override
     if (stressedCount >= 2 && currentLevel < 3) {
       state = "Empathy Anchor";
       pose = "holding-heart";
@@ -183,7 +253,7 @@ export default function ProfilePage() {
     }
 
     return { level: currentLevel, title, state, pose, desc };
-  }, [mascot]);
+  }, [mascot, dbLogs]);
 
   const currentAvatar = AVATARS.find((a) => a.id === activeAvatar) || AVATARS[1];
 
@@ -191,7 +261,8 @@ export default function ProfilePage() {
   const clinicalInsights = useMemo(() => {
     const sleepRisk = persona.sleepHours.includes("<5") || persona.sleepHours.includes("5-6");
     const stressRisk = persona.stressLevel >= 7;
-    const triggersCount = persona.triggers.length;
+    const cleanTriggers = persona.triggers.filter(t => !t.startsWith("water:") && !t.startsWith("screentime:") && !t.startsWith("social:") && !t.startsWith("activity:"));
+    const triggersCount = cleanTriggers.length;
 
     let level = "Balanced Baseline";
     let color = "var(--color-success)";
@@ -200,7 +271,7 @@ export default function ProfilePage() {
     if (sleepRisk && stressRisk) {
       level = "Hyperarousal Spark Warning";
       color = "var(--color-error)";
-      desc = "Sleep debt (<6h) coupled with high stress risks autonomic hyperarousal. Highly recommend pacing with 4-7-8 Breathing exercises and journaling daily.";
+      desc = "Sleep debt Coupled with high stress risks autonomic hyperarousal. Highly recommend pacing with 4-7-8 Breathing exercises and journaling daily.";
     } else if (stressRisk || triggersCount >= 3) {
       level = "Elevated Autonomic Stress";
       color = "var(--color-accent)";
@@ -209,6 +280,25 @@ export default function ProfilePage() {
 
     return { level, color, desc };
   }, [persona]);
+
+  // Clean elements parsed from composite triggers for view panel
+  const parsedWater = useMemo(() => persona.triggers.find(t => t.startsWith("water:"))?.replace("water:", "") || "1-2 Liters", [persona.triggers]);
+  const parsedScreen = useMemo(() => persona.triggers.find(t => t.startsWith("screentime:"))?.replace("screentime:", "") || "5-8 Hours", [persona.triggers]);
+  const parsedSocial = useMemo(() => persona.triggers.find(t => t.startsWith("social:"))?.replace("social:", "") || "Neutral Connection", [persona.triggers]);
+  const parsedActivity = useMemo(() => persona.triggers.find(t => t.startsWith("activity:"))?.replace("activity:", "") || "Light Walking / Yoga", [persona.triggers]);
+  const parsedCleanTriggers = useMemo(() => persona.triggers.filter(t => !t.startsWith("water:") && !t.startsWith("screentime:") && !t.startsWith("social:") && !t.startsWith("activity:")), [persona.triggers]);
+
+  const updateStressChoice = (qIdx: number, val: number) => {
+    const copy = [...stressAnswers];
+    copy[qIdx] = val;
+    setStressAnswers(copy);
+  };
+
+  const updateCareChoice = (qIdx: number, val: number) => {
+    const copy = [...careAnswers];
+    copy[qIdx] = val;
+    setCareAnswers(copy);
+  };
 
   return (
     <div
@@ -242,16 +332,18 @@ export default function ProfilePage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "48px",
+              fontWeight: "800",
+              color: "#FFFFFF",
+              fontSize: "36px",
               boxShadow: "var(--shadow-subtle)",
               border: "3.5px solid var(--color-primary)",
             }}
           >
-            {currentAvatar.emoji}
+            {currentAvatar.initials}
           </div>
 
           <div>
-            <h3 style={{ fontSize: "18px", fontWeight: "600" }}>Rishabh Rai</h3>
+            <h3 style={{ fontSize: "18px", fontWeight: "700" }}>{user?.displayName || "Ranjeet choudhary"}</h3>
             <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{persona.occupation}</p>
           </div>
 
@@ -259,7 +351,7 @@ export default function ProfilePage() {
 
           {/* Profile Picture Avatar Selection Grid */}
           <div style={{ width: "100%" }}>
-            <h4 style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "10px", textAlign: "left", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <h4 style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "10px", textAlign: "left", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               Select Avatar
             </h4>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
@@ -274,7 +366,9 @@ export default function ProfilePage() {
                       borderRadius: "10px",
                       border: isSelected ? "2.5px solid var(--color-primary)" : "1.5px solid var(--border-light)",
                       backgroundColor: isSelected ? "var(--bg-user-bubble)" : "var(--bg-surface)",
-                      fontSize: "20px",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: isSelected ? "var(--color-primary)" : "var(--text-primary)",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
@@ -283,7 +377,7 @@ export default function ProfilePage() {
                     }}
                     title={av.label}
                   >
-                    {av.emoji}
+                    {av.initials}
                   </button>
                 );
               })}
@@ -393,7 +487,7 @@ export default function ProfilePage() {
 
           {isEditing ? (
             /* Editing form */
-            <form onSubmit={handleSavePersona} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <form onSubmit={handleSavePersona} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
                   <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Age</label>
@@ -464,34 +558,145 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Sliders */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+              {/* Stress Questions */}
+              <div className="glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <h4 style={{ fontSize: "14px", fontWeight: "700", color: "var(--color-error)" }}>
+                  Autonomic Stress Diagnostic Questionnaire
+                </h4>
+                {[
+                  "1. Feel unable to control important life events?",
+                  "2. Feel nervous, stressed, or hyperaroused?",
+                  "3. Struggle to sleep or turn off circular worries?",
+                  "4. Feel physically fatigued, tight-chested, or tense?"
+                ].map((q, idx) => (
+                  <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: "600" }}>{q}</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
+                      {["Never", "Rarely", "Often", "Always"].map((label, val) => {
+                        const selected = stressAnswers[idx] === val;
+                        return (
+                          <button
+                            type="button"
+                            key={val}
+                            onClick={() => updateStressChoice(idx, val)}
+                            style={{
+                              padding: "6px",
+                              borderRadius: "6px",
+                              fontSize: "10px",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                              border: selected ? "2px solid var(--color-error)" : "1px solid var(--border-light)",
+                              backgroundColor: selected ? "rgba(192, 118, 90, 0.08)" : "var(--bg-surface)",
+                              color: selected ? "var(--color-error)" : "var(--text-secondary)",
+                            }}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Self Care Questions */}
+              <div className="glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <h4 style={{ fontSize: "14px", fontWeight: "700", color: "var(--color-success)" }}>
+                  Self-Care Dedication Questionnaire
+                </h4>
+                {[
+                  "1. Practice deliberate breathing, pacing, or stretching?",
+                  "2. Log your active mood or write reflective journals?",
+                  "3. Set boundaries between work/study pressure and rest?",
+                  "4. Seek wellness guides or use companion coping tools?"
+                ].map((q, idx) => (
+                  <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: "600" }}>{q}</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
+                      {["Never", "Rarely", "Moderately", "Highly"].map((label, val) => {
+                        const selected = careAnswers[idx] === val;
+                        return (
+                          <button
+                            type="button"
+                            key={val}
+                            onClick={() => updateCareChoice(idx, val)}
+                            style={{
+                              padding: "6px",
+                              borderRadius: "6px",
+                              fontSize: "10px",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                              border: selected ? "2px solid var(--color-success)" : "1px solid var(--border-light)",
+                              backgroundColor: selected ? "rgba(125, 170, 143, 0.08)" : "var(--bg-surface)",
+                              color: selected ? "var(--color-success)" : "var(--text-secondary)",
+                            }}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Additional parameters */}
+              <div className="glass-card" style={{ padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                    Typical Stress Level: <strong style={{ color: "var(--color-error)" }}>{tempStress}/10</strong>
+                  <label style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                    Daily Water Intake
                   </label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={tempStress}
-                    onChange={(e) => setTempStress(Number(e.target.value))}
-                    style={{ cursor: "pointer", height: "6px" }}
-                  />
+                  <select value={waterIntake} onChange={(e) => setWaterIntake(e.target.value)}>
+                    <option value="Under 1 Liter">Under 1 Liter</option>
+                    <option value="1-2 Liters">1-2 Liters</option>
+                    <option value="2-3 Liters">2-3 Liters</option>
+                    <option value="Over 3 Liters">Over 3 Liters</option>
+                  </select>
                 </div>
+
                 <div>
-                  <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
-                    Self-Care Commitment: <strong style={{ color: "var(--color-success)" }}>{tempSelfCare}/10</strong>
+                  <label style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                    Screen Time Exposure
                   </label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={tempSelfCare}
-                    onChange={(e) => setTempSelfCare(Number(e.target.value))}
-                    style={{ cursor: "pointer", height: "6px" }}
-                  />
+                  <select value={screenTime} onChange={(e) => setScreenTime(e.target.value)}>
+                    <option value="Under 2 Hours">Under 2 Hours</option>
+                    <option value="2-5 Hours">2-5 Hours</option>
+                    <option value="5-8 Hours">5-8 Hours</option>
+                    <option value="Over 8 Hours">Over 8 Hours</option>
+                  </select>
                 </div>
+
+                <div>
+                  <label style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                    Social Context Support
+                  </label>
+                  <select value={socialContext} onChange={(e) => setSocialContext(e.target.value)}>
+                    <option value="Feeling Isolated">Feeling Isolated</option>
+                    <option value="Neutral Connection">Neutral Connection</option>
+                    <option value="Strong Support Network">Strong Support Network</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                    Physical Activity Rate
+                  </label>
+                  <select value={physicalActivity} onChange={(e) => setPhysicalActivity(e.target.value)}>
+                    <option value="Sedentary baseline">Sedentary baseline</option>
+                    <option value="Light Walking / Yoga">Light Walking / Yoga</option>
+                    <option value="Heavy Workout / Cardio">Heavy Workout / Cardio</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Questionnaire score calculations indicators */}
+              <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+                <span style={{ fontSize: "12px", fontWeight: "700", backgroundColor: "rgba(192,118,90,0.12)", color: "var(--color-error)", padding: "4px 10px", borderRadius: "10px" }}>
+                  Stress Score: {calculatedStress} / 10
+                </span>
+                <span style={{ fontSize: "12px", fontWeight: "700", backgroundColor: "rgba(125,170,143,0.12)", color: "var(--color-success)", padding: "4px 10px", borderRadius: "10px" }}>
+                  Self-Care Index: {calculatedSelfCare} / 10
+                </span>
               </div>
 
               {/* Triggers Checklist */}
@@ -546,7 +751,7 @@ export default function ProfilePage() {
             </form>
           ) : (
             /* Review Panel */
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                 <div style={{ borderBottom: "1px solid var(--border-light)", paddingBottom: "10px" }}>
                   <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase" }}>Age</div>
@@ -569,6 +774,28 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div style={{ borderBottom: "1px solid var(--border-light)", paddingBottom: "10px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase" }}>Daily Water Intake</div>
+                  <div style={{ fontSize: "15px", fontWeight: "600", marginTop: "4px" }}>{parsedWater}</div>
+                </div>
+                <div style={{ borderBottom: "1px solid var(--border-light)", paddingBottom: "10px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase" }}>Screen Time Exposure</div>
+                  <div style={{ fontSize: "15px", fontWeight: "600", marginTop: "4px" }}>{parsedScreen}</div>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div style={{ borderBottom: "1px solid var(--border-light)", paddingBottom: "10px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase" }}>Social Support Context</div>
+                  <div style={{ fontSize: "15px", fontWeight: "600", marginTop: "4px" }}>{parsedSocial}</div>
+                </div>
+                <div style={{ borderBottom: "1px solid var(--border-light)", paddingBottom: "10px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase" }}>Physical Activity Rate</div>
+                  <div style={{ fontSize: "15px", fontWeight: "600", marginTop: "4px" }}>{parsedActivity}</div>
+                </div>
+              </div>
+
               <div>
                 <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>Primary Health Goal</div>
                 <div style={{ fontSize: "15px", fontWeight: "600", color: "var(--color-primary)" }}>{persona.mentalGoal}</div>
@@ -577,7 +804,7 @@ export default function ProfilePage() {
               <div>
                 <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>Identified Anxiety Triggers</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {persona.triggers.map((tr) => (
+                  {parsedCleanTriggers.map((tr) => (
                     <span
                       key={tr}
                       style={{
@@ -590,7 +817,7 @@ export default function ProfilePage() {
                         color: "var(--text-primary)",
                       }}
                     >
-                      ⚠️ {tr}
+                      {tr}
                     </span>
                   ))}
                 </div>

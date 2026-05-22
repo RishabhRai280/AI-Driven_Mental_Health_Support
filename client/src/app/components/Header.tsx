@@ -15,33 +15,54 @@ export default function Header({ onToggleSidebar, isSidebarCollapsed, onToggleCo
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const [userAvatar, setUserAvatar] = useState("🐹");
+  const [userAvatar, setUserAvatar] = useState("RC");
+  const [avatarBg, setAvatarBg] = useState("var(--color-primary)");
 
   useEffect(() => {
-    // Detect system theme or current body setup
-    const isDark = document.documentElement.classList.contains("dark") || 
-      window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setTheme(isDark ? "dark" : "light");
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    }
+    const loadThemeAndAvatar = () => {
+      // 1. Stateful theme check (checks localStorage theme first)
+      let savedTheme = localStorage.getItem("sm_theme") as "light" | "dark" | null;
+      if (!savedTheme) {
+        const isDarkSystem = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        savedTheme = isDarkSystem ? "dark" : "light";
+      }
 
-    // Load avatar from localStorage
-    const saved = localStorage.getItem("user-avatar");
-    if (saved) {
-      const emojiMap: Record<string, string> = {
-        bird: "🐦",
-        hamster: "🐹",
-        koala: "🐨",
-        cheetah: "🐆",
+      setTheme(savedTheme);
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+
+      // 2. Load avatar initials and bg from localStorage
+      const saved = localStorage.getItem("user-avatar");
+      const avatarData: Record<string, { label: string; bg: string }> = {
+        bird: { label: "SB", bg: "rgba(91, 127, 166, 0.9)" },
+        hamster: { label: "RC", bg: "rgba(125, 170, 143, 0.9)" },
+        koala: { label: "ZK", bg: "rgba(169, 146, 196, 0.9)" },
+        cheetah: { label: "MC", bg: "rgba(192, 118, 90, 0.9)" },
       };
-      setUserAvatar(emojiMap[saved] || "🐹");
-    }
+      if (saved && avatarData[saved]) {
+        setUserAvatar(avatarData[saved].label);
+        setAvatarBg(avatarData[saved].bg);
+      } else {
+        setUserAvatar("RC");
+        setAvatarBg("var(--color-primary)");
+      }
+    };
+
+    loadThemeAndAvatar();
+
+    window.addEventListener("storage", loadThemeAndAvatar);
+    return () => {
+      window.removeEventListener("storage", loadThemeAndAvatar);
+    };
   }, [pathname]);
 
   const toggleTheme = () => {
     const nextTheme = theme === "light" ? "dark" : "light";
     setTheme(nextTheme);
+    localStorage.setItem("sm_theme", nextTheme);
     if (nextTheme === "dark") {
       document.documentElement.classList.add("dark");
     } else {
@@ -140,7 +161,20 @@ export default function Header({ onToggleSidebar, isSidebarCollapsed, onToggleCo
           }}
           title="Daily Streak! Keep it up."
         >
-          <span>🐹</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ color: "var(--color-success)" }}
+          >
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+          </svg>
           <span>5 Day Streak</span>
         </div>
 
@@ -224,7 +258,7 @@ export default function Header({ onToggleSidebar, isSidebarCollapsed, onToggleCo
               <h4 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px" }}>Notifications</h4>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div style={{ fontSize: "13px", color: "var(--text-primary)", borderBottom: "1px solid var(--border-light)", paddingBottom: "8px" }}>
-                  <strong>🐹 Sparky says:</strong> Let&apos;s complete a short breathing exercise today!
+                  <strong>Sparky Companion:</strong> Let&apos;s complete a short breathing exercise today!
                 </div>
                 <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
                   Daily journal reminder: Don&apos;t forget to check in on your feelings.
@@ -241,13 +275,13 @@ export default function Header({ onToggleSidebar, isSidebarCollapsed, onToggleCo
             width: "40px",
             height: "40px",
             borderRadius: "50%",
-            backgroundColor: "var(--color-primary)",
+            backgroundColor: avatarBg,
             color: "#FFFFFF",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontWeight: "600",
-            fontSize: "20px",
+            fontWeight: "700",
+            fontSize: "14px",
             border: "2px solid var(--bg-surface)",
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
             cursor: "pointer",
