@@ -43,6 +43,9 @@ export default function AnalysisPage() {
   const [editMood, setEditMood] = useState<CalendarDay["mood"]>("Calm");
   const [editNote, setEditNote] = useState("");
 
+  // Voice Input State
+  const [isListening, setIsListening] = useState(false);
+
   // Load from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("mood-calendar");
@@ -69,6 +72,50 @@ export default function AnalysisPage() {
   const saveDays = (newDays: CalendarDay[]) => {
     setDays(newDays);
     localStorage.setItem("mood-calendar", JSON.stringify(newDays));
+  };
+
+  // Speech Recognition Speech-to-text dictation
+  const toggleVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser. Please try Google Chrome or Microsoft Edge.");
+      return;
+    }
+
+    if (isListening) {
+      if ((window as any).currentAnalysisRecognition) {
+        (window as any).currentAnalysisRecognition.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      if (transcript) {
+        setEditNote((prev) => prev + (prev ? " " : "") + transcript.trim() + ".");
+      }
+    };
+
+    (window as any).currentAnalysisRecognition = recognition;
+    recognition.start();
   };
 
   const handleUpdateDay = (e: React.FormEvent) => {
@@ -456,14 +503,39 @@ export default function AnalysisPage() {
                 </select>
               </div>
 
+              {/* Notes input with inline Speech Dictation */}
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Daily Diagnostic Notes</label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", margin: 0 }}>
+                    Daily Diagnostic Notes
+                  </label>
+                  <button
+                    type="button"
+                    onClick={toggleVoiceInput}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: isListening ? "var(--color-error)" : "var(--color-primary)",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      animation: isListening ? "pulse-mic 1.5s infinite" : "none",
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={isListening ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                    {isListening ? "Listening (Stop)" : "Dictate"}
+                  </button>
+                </div>
                 <textarea
                   value={editNote}
                   onChange={(e) => setEditNote(e.target.value)}
+                  disabled={isListening}
                   rows={4}
                   required
-                  style={{ fontSize: "14px" }}
+                  style={{ fontSize: "14px", transition: "all 0.3s ease", border: isListening ? "1.5px solid var(--color-error)" : "1.5px solid var(--border-input)" }}
                 />
               </div>
 
@@ -607,6 +679,12 @@ export default function AnalysisPage() {
           transform: translateY(-2px);
           box-shadow: var(--shadow-hover) !important;
           border-color: var(--color-primary) !important;
+        }
+
+        @keyframes pulse-mic {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.15); opacity: 0.8; }
+          100% { transform: scale(1); }
         }
 
         @media (max-width: 900px) {

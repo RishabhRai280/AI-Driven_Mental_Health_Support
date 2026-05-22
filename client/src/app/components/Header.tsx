@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -14,6 +15,8 @@ export default function Header({ onToggleSidebar, isSidebarCollapsed, onToggleCo
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [showNotifications, setShowNotifications] = useState(false);
 
+  const [userAvatar, setUserAvatar] = useState("🐹");
+
   useEffect(() => {
     // Detect system theme or current body setup
     const isDark = document.documentElement.classList.contains("dark") || 
@@ -22,7 +25,19 @@ export default function Header({ onToggleSidebar, isSidebarCollapsed, onToggleCo
     if (isDark) {
       document.documentElement.classList.add("dark");
     }
-  }, []);
+
+    // Load avatar from localStorage
+    const saved = localStorage.getItem("user-avatar");
+    if (saved) {
+      const emojiMap: Record<string, string> = {
+        bird: "🐦",
+        hamster: "🐹",
+        koala: "🐨",
+        cheetah: "🐆",
+      };
+      setUserAvatar(emojiMap[saved] || "🐹");
+    }
+  }, [pathname]);
 
   const toggleTheme = () => {
     const nextTheme = theme === "light" ? "dark" : "light";
@@ -48,6 +63,8 @@ export default function Header({ onToggleSidebar, isSidebarCollapsed, onToggleCo
         return "Insights & Trends";
       case "/exercises":
         return "Recommended Wellness Practices";
+      case "/profile":
+        return "Profile & Mental Health Persona";
       case "/crisis-sos":
         return "Crisis SOS Calm Care";
       default:
@@ -217,8 +234,9 @@ export default function Header({ onToggleSidebar, isSidebarCollapsed, onToggleCo
           )}
         </div>
 
-        {/* 40x40px Circular Avatar */}
-        <div
+        {/* 40x40px Circular Avatar Link */}
+        <Link
+          href="/profile"
           style={{
             width: "40px",
             height: "40px",
@@ -229,15 +247,18 @@ export default function Header({ onToggleSidebar, isSidebarCollapsed, onToggleCo
             alignItems: "center",
             justifyContent: "center",
             fontWeight: "600",
-            fontSize: "14px",
+            fontSize: "20px",
             border: "2px solid var(--bg-surface)",
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
             cursor: "pointer",
+            textDecoration: "none",
+            transition: "transform 0.2s ease",
           }}
-          title="User Profile"
+          title="User Profile & Persona"
+          className="header-avatar-link"
         >
-          RR
-        </div>
+          {userAvatar}
+        </Link>
       </div>
 
       <style jsx global>{`

@@ -25,6 +25,9 @@ export default function ChatbotPage() {
   const [mascotDialogue, setMascotDialogue] = useState("Let's talk! I'm listening.");
   const [isTyping, setIsTyping] = useState(false);
   const [showSafetyBanner, setShowSafetyBanner] = useState(false);
+  
+  // Voice Input State
+  const [isListening, setIsListening] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -65,7 +68,7 @@ export default function ChatbotPage() {
         dialogue: "You are not alone. I'm right here holding space for you.",
       };
     }
-    if (lower.includes("happy") || lower.includes("glad") || lower.includes("excited") || lower.includes("good")) {
+    if (lower.includes("happy") || lower.includes("glad") || lower.includes("excited") || lower.includes("good") || lower.includes("refreshed")) {
       return {
         pose: "celebrating-success",
         dialogue: "Hooray! Hearing this fills my little heart with joy!",
@@ -83,11 +86,58 @@ export default function ChatbotPage() {
     };
   };
 
+  // Speech Recognition Speech-to-text dictation
+  const toggleVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser. Please try Google Chrome or Microsoft Edge.");
+      return;
+    }
+
+    if (isListening) {
+      if ((window as any).currentChatRecognition) {
+        (window as any).currentChatRecognition.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setMascotPose("thinking-deeply");
+      setMascotDialogue("Listening... Speak your mind to Sparky!");
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onerror = (e: any) => {
+      console.error(e.error);
+      setIsListening(false);
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      if (transcript) {
+        setInputVal((prev) => prev + (prev ? " " : "") + transcript.trim());
+      }
+    };
+
+    (window as any).currentChatRecognition = recognition;
+    recognition.start();
+  };
+
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputVal.trim()) return;
 
-    const userMsgText = inputVal;
+    const userMsgText = inputVal.trim();
     const userMsg: Message = {
       id: Math.random().toString(),
       sender: "user",
@@ -98,6 +148,47 @@ export default function ChatbotPage() {
     setMessages((prev) => [...prev, userMsg]);
     setInputVal("");
     checkSafetyTriggers(userMsgText);
+
+    // Save Chat record into unified Wellness Timeline logs in localStorage
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }) + " at " + now.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    let detectedSentiment = "Neutral";
+    if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good") || userMsgText.toLowerCase().includes("glad")) {
+      detectedSentiment = "Positive";
+    } else if (userMsgText.toLowerCase().includes("anxious") || userMsgText.toLowerCase().includes("panic")) {
+      detectedSentiment = "Anxious";
+    } else if (userMsgText.toLowerCase().includes("stress") || userMsgText.toLowerCase().includes("overwhelm")) {
+      detectedSentiment = "Stressed";
+    }
+
+    const newLog = {
+      id: String(Date.now()),
+      type: "chat" as const,
+      title: `Companion chat with Sparky`,
+      preview: `Vent details: "${userMsgText.length > 80 ? userMsgText.slice(0, 80) + '...' : userMsgText}"`,
+      date: formattedDate,
+      sentiment: detectedSentiment,
+    };
+
+    const savedLogs = localStorage.getItem("wellness-logs");
+    let currentLogs = [];
+    if (savedLogs) {
+      try {
+        currentLogs = JSON.parse(savedLogs);
+      } catch (e) {
+        currentLogs = [];
+      }
+    }
+    localStorage.setItem("wellness-logs", JSON.stringify([newLog, ...currentLogs]));
 
     // Swap mascot to cognitive head-scratching typing state
     setIsTyping(true);
@@ -118,6 +209,8 @@ export default function ChatbotPage() {
         sparkyReply = "Overwhelm comes when we try to solve everything at once. Let's take a deep breath, write a simple bulleted list of 2 tiny things you can do today, and let the rest sit.";
       } else if (userMsgText.toLowerCase().includes("sad")) {
         sparkyReply = "It's completely okay to feel sad. You don't have to put on a brave face. Just let the feelings be, and know that I am right here listening.";
+      } else if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good") || userMsgText.toLowerCase().includes("great")) {
+        sparkyReply = "That's fantastic! Celebrating positive moments is so critical for cognitive balance. What made you feel so bright today?";
       }
 
       setMessages((prev) => [
@@ -277,20 +370,63 @@ export default function ChatbotPage() {
             display: "flex",
             gap: "12px",
             backgroundColor: "var(--bg-nav)",
+            alignItems: "center",
           }}
         >
-          <input
-            type="text"
-            placeholder="Type your feelings... (e.g. 'I feel anxious' or 'stress')"
+          {/* Glowing Microphone voice input */}
+          <button
+            onClick={toggleVoiceInput}
+            type="button"
+            className="btn-secondary voice-chat-btn"
+            style={{
+              borderRadius: "50%",
+              width: "48px",
+              height: "48px",
+              padding: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              borderColor: isListening ? "var(--color-error)" : "var(--color-primary)",
+              color: isListening ? "var(--color-error)" : "var(--color-primary)",
+              boxShadow: isListening ? "0 0 14px rgba(192, 118, 90, 0.3)" : "none",
+              animation: isListening ? "pulse-mic-chat 1.5s infinite" : "none",
+            }}
+            title="Dictate message"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={isListening ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+
+          <textarea
+            placeholder={isListening ? "Listening... Speak now!" : "Type your feelings... (e.g. 'I feel anxious' or 'stress')"}
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
+            disabled={isListening}
+            rows={Math.min(5, inputVal.split("\n").length || 1)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend(e);
+              }
+            }}
             style={{
               flex: 1,
-              borderRadius: "24px",
-              height: "48px",
+              borderRadius: "16px",
+              padding: "12px 16px",
+              backgroundColor: isListening ? "var(--bg-nav)" : "var(--bg-surface)",
+              color: "var(--text-primary)",
+              border: "1.5px solid var(--border-input)",
+              outline: "none",
+              resize: "none",
+              minHeight: "48px",
+              maxHeight: "150px",
+              fontFamily: "var(--font-body)",
+              fontSize: "15px",
+              lineHeight: "1.5",
+              transition: "all 0.3s ease",
             }}
           />
-          <button type="submit" className="btn-primary" style={{ borderRadius: "24px", width: "48px", height: "48px", padding: 0 }}>
+          <button type="submit" className="btn-primary" style={{ borderRadius: "24px", width: "48px", height: "48px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </form>
@@ -331,7 +467,7 @@ export default function ChatbotPage() {
             <button
               onClick={() => {
                 setMascotPose("celebrating-success");
-                setMascotDialogue("Let&apos;s celebrate our small mindfulness steps!");
+                setMascotDialogue("Let's celebrate our small mindfulness steps!");
               }}
               className="btn-secondary"
               style={{ padding: "8px", fontSize: "12px", borderRadius: "12px" }}
@@ -363,11 +499,17 @@ export default function ChatbotPage() {
       </div>
 
       <style jsx global>{`
+        @keyframes pulse-mic-chat {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.08); box-shadow: 0 0 14px rgba(192, 118, 90, 0.5); }
+          100% { transform: scale(1); }
+        }
+
         .typing-dot {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          backgroundColor: var(--text-secondary);
+          background-color: var(--text-secondary);
           opacity: 0.4;
           animation: typing-indicator 1.2s infinite alternate;
         }

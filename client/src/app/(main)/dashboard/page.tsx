@@ -1,12 +1,62 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Mascot, { HamsterPose } from "../../components/Mascot";
 
 type Mood = "Calm" | "Anxious" | "Stressed" | "Sad" | "Energetic";
 
+interface AdoptedMascot {
+  name: string;
+  eggType: string;
+  initialPersonality: string;
+  level: number;
+}
+
+interface UserPersona {
+  age: string;
+  occupation: string;
+  sleepHours: string;
+  stressLevel: number;
+  triggers: string[];
+  selfCareScale: number;
+  mentalGoal: string;
+}
+
+const EGGS = [
+  { id: "sage", label: "Moss Sage Egg", color: "var(--color-success)", glow: "rgba(90, 148, 117, 0.4)", desc: "Hatches a Joyful companion: Cheerful, active, and highly motivating." },
+  { id: "sapphire", label: "Mist Sapphire Egg", color: "var(--color-primary)", glow: "rgba(91, 127, 166, 0.4)", desc: "Hatches a Peaceful companion: Quiet, pensive, and deeply comforting." },
+  { id: "amethyst", label: "Lavender Amethyst Egg", color: "var(--color-accent)", glow: "rgba(169, 146, 196, 0.4)", desc: "Hatches a Zen companion: Stoic, calm, and perfectly balanced." },
+  { id: "hearth", label: "Terracotta Hearth Egg", color: "var(--color-error)", glow: "rgba(192, 118, 90, 0.4)", desc: "Hatches a Guardian companion: Protective, warm, and highly encouraging." },
+];
+
 export default function DashboardPage() {
+  // Navigation & Adoption States
+  const [hasAdoptedMascot, setHasAdoptedMascot] = useState(true);
+  const [hasFilledPersona, setHasFilledPersona] = useState(true);
+
+  // Egg Selection states
+  const [selectedEgg, setSelectedEgg] = useState<typeof EGGS[0] | null>(null);
+  const [hatchStep, setHatchStep] = useState<"choose" | "tap" | "name" | "persona">("choose");
+  const [tapCount, setTapCount] = useState(0);
+  const [isHatchingShaking, setIsHatchingShaking] = useState(false);
+  const [floatingTexts, setFloatingTexts] = useState<{ id: number; text: string; x: number; y: number }[]>([]);
+
+  // Name & Persona Form states
+  const [mascotName, setMascotName] = useState("Sparky");
+  const [mascotDemeanor, setMascotDemeanor] = useState("Calming & Stoic");
+  const [adoptedMascotState, setAdoptedMascotState] = useState<AdoptedMascot | null>(null);
+
+  // Persona Telemetry states
+  const [age, setAge] = useState("");
+  const [occupation, setOccupation] = useState("");
+  const [sleepHours, setSleepHours] = useState("7-8 hours");
+  const [stressLevel, setStressLevel] = useState(5);
+  const [selfCareScale, setSelfCareScale] = useState(5);
+  const [mentalGoal, setMentalGoal] = useState("Achieve Calmer Baselines");
+  const [tempTriggers, setTempTriggers] = useState<string[]>([]);
+
+  // Normal Dashboard states
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const [mascotPose, setMascotPose] = useState<HamsterPose>("waving-hello");
   const [isBreathingActive, setIsBreathingActive] = useState(false);
@@ -45,42 +95,644 @@ export default function DashboardPage() {
     },
   ];
 
+  // Check adoption on mount
+  useEffect(() => {
+    const adopted = localStorage.getItem("adopted-mascot");
+    const personaData = localStorage.getItem("user-persona");
+    if (adopted) {
+      try {
+        setAdoptedMascotState(JSON.parse(adopted));
+        setHasAdoptedMascot(true);
+      } catch (e) {
+        setHasAdoptedMascot(false);
+      }
+    } else {
+      setHasAdoptedMascot(false);
+      setHatchStep("choose");
+    }
+
+    if (personaData) {
+      setHasFilledPersona(true);
+    } else {
+      setHasFilledPersona(false);
+    }
+  }, []);
+
+  // Evolution engine mapping user self-care progression to mascot evolution updates
+  const mascotProgressInfo = useMemo(() => {
+    if (!adoptedMascotState) return { level: 1, title: "Hatchling Bond", state: "Calm Observer", pose: "waving-hello" as HamsterPose };
+
+    const savedLogs = localStorage.getItem("wellness-logs");
+    let logsCount = 0;
+    let positiveCount = 0;
+    let stressedCount = 0;
+
+    if (savedLogs) {
+      try {
+        const parsed = JSON.parse(savedLogs);
+        logsCount = parsed.length;
+        positiveCount = parsed.filter((l: any) => l.sentiment === "Positive").length;
+        stressedCount = parsed.filter((l: any) => l.sentiment === "Stressed" || l.sentiment === "Anxious").length;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    let level = 1;
+    let title = "Mindful Hatchling";
+    let state = "Gentle Observer";
+    let pose: HamsterPose = "waving-hello";
+
+    if (logsCount >= 6 || positiveCount >= 3) {
+      level = 3;
+      title = "Serenity Guardian";
+      state = "Zen Master";
+      pose = "sitting-zen";
+    } else if (logsCount >= 3 || positiveCount >= 1) {
+      level = 2;
+      title = "Mindful Shield";
+      state = "Uplifting Guide";
+      pose = "celebrating-success";
+    }
+
+    // Stress response override
+    if (stressedCount >= 2 && level < 3) {
+      state = "Empathy Anchor";
+      pose = "holding-heart";
+    }
+
+    return { level, title, state, pose };
+  }, [adoptedMascotState]);
+
+  // Adjust current dashboard mascot pose to match evolved state on startup
+  useEffect(() => {
+    if (hasAdoptedMascot && hasFilledPersona) {
+      setMascotPose(mascotProgressInfo.pose);
+    }
+  }, [hasAdoptedMascot, hasFilledPersona, mascotProgressInfo.pose]);
+
+  // Stabilize the breathing interval with standard hook architecture to resolve stale closures
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isBreathingActive) {
+      setBreathingText("Breathe in... (Expand)");
+      let count = 0;
+      interval = setInterval(() => {
+        count++;
+        if (count % 3 === 0) {
+          setBreathingText("Breathe in... (Expand)");
+        } else if (count % 3 === 1) {
+          setBreathingText("Hold... (Sustain)");
+        } else {
+          setBreathingText("Breathe out... (Relax)");
+        }
+      }, 4000);
+    } else {
+      setBreathingText("Click Start to practice");
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isBreathingActive]);
+
   const handleMoodSelect = (moodItem: typeof moods[0]) => {
     setSelectedMood(moodItem.label);
     setMascotPose(moodItem.pose);
+
+    // Save Mood Check-in log directly into the unified Wellness Timeline logs in localStorage
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }) + " at " + now.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    let detectedSentiment = "Neutral";
+    if (moodItem.label === "Calm" || moodItem.label === "Energetic") {
+      detectedSentiment = "Positive";
+    } else if (moodItem.label === "Anxious") {
+      detectedSentiment = "Anxious";
+    } else if (moodItem.label === "Stressed") {
+      detectedSentiment = "Stressed";
+    }
+
+    const newLog = {
+      id: String(Date.now()),
+      type: "journal" as const,
+      title: `Dashboard Mood Checked-in: ${moodItem.label}`,
+      preview: `Checked in feeling ${moodItem.label} on the main dashboard. Sparky companion noted: "${moodItem.dialogue}"`,
+      date: formattedDate,
+      sentiment: detectedSentiment,
+    };
+
+    // Load and update logs
+    const savedLogs = localStorage.getItem("wellness-logs");
+    let currentLogs = [];
+    if (savedLogs) {
+      try {
+        currentLogs = JSON.parse(savedLogs);
+      } catch (e) {
+        currentLogs = [];
+      }
+    }
+    
+    localStorage.setItem("wellness-logs", JSON.stringify([newLog, ...currentLogs]));
+
+    // Reassuring Alert dialogue feedback
+    alert(`Sparky logged your "${moodItem.label}" check-in! Feel free to review it inside your Wellness Timeline logs.`);
   };
 
   const toggleBreathing = () => {
-    if (isBreathingActive) {
-      setIsBreathingActive(false);
-      setBreathingText("Click Start to practice");
-      setMascotPose("waving-hello");
+    setIsBreathingActive(!isBreathingActive);
+    if (!isBreathingActive) {
+      setMascotPose(mascotProgressInfo.pose);
     } else {
-      setIsBreathingActive(true);
       setMascotPose("sitting-zen");
-      setBreathingText("Breathe in... Hold... Breathe out...");
-      // Simulate pacer intervals
-      let count = 0;
-      const interval = setInterval(() => {
-        if (!isBreathingActive) {
-          count++;
-          if (count % 3 === 0) setBreathingText("Breathe in... (Expand)");
-          else if (count % 3 === 1) setBreathingText("Hold... (Sustain)");
-          else setBreathingText("Breathe out... (Relax)");
-        }
-      }, 4000);
-      (window as any).breathingInterval = interval;
     }
   };
 
-  React.useEffect(() => {
-    return () => {
-      if ((window as any).breathingInterval) {
-        clearInterval((window as any).breathingInterval);
-      }
-    };
-  }, []);
+  // Egg Hatching clicks
+  const handleEggTap = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (tapCount >= 5) return;
+    
+    // Shaking motion effect
+    setIsHatchingShaking(true);
+    setTimeout(() => setIsHatchingShaking(false), 120);
 
+    const nextTaps = tapCount + 1;
+    setTapCount(nextTaps);
+
+    // Floating text feedback
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const crackPhrases = ["*Tap!*", "*Crack!*", "*Wobble!*", "*Squeak!*", "*Burst!*"];
+    
+    setFloatingTexts((prev) => [
+      ...prev,
+      { id: Date.now(), text: crackPhrases[nextTaps - 1] || "*Crack!*", x, y },
+    ]);
+
+    if (nextTaps >= 5) {
+      setTimeout(() => {
+        setHatchStep("name");
+      }, 900);
+    }
+  };
+
+  const handleAdoptSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newMascot: AdoptedMascot = {
+      name: mascotName.trim() || "Sparky",
+      eggType: selectedEgg?.label || "Moss Sage Egg",
+      initialPersonality: mascotDemeanor,
+      level: 1,
+    };
+
+    localStorage.setItem("adopted-mascot", JSON.stringify(newMascot));
+    setAdoptedMascotState(newMascot);
+    setHasAdoptedMascot(true);
+    setHatchStep("persona");
+  };
+
+  const handlePersonaSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!age || !occupation) {
+      alert("Please fill out your Age and Occupation for a validated persona.");
+      return;
+    }
+
+    const newPersona: UserPersona = {
+      age,
+      occupation,
+      sleepHours,
+      stressLevel,
+      triggers: tempTriggers,
+      selfCareScale,
+      mentalGoal,
+    };
+
+    localStorage.setItem("user-persona", JSON.stringify(newPersona));
+    setHasFilledPersona(true);
+    alert(`Congratulations! ${mascotName} is now bonded, and your persona has been successfully established.`);
+  };
+
+  const toggleTrigger = (tr: string) => {
+    if (tempTriggers.includes(tr)) {
+      setTempTriggers(tempTriggers.filter((t) => t !== tr));
+    } else {
+      setTempTriggers([...tempTriggers, tr]);
+    }
+  };
+
+  // ==========================================
+  // RENDER: Hatching Adoption Wizard Flow
+  // ==========================================
+  if (!hasAdoptedMascot || !hasFilledPersona) {
+    return (
+      <div
+        className="glass-card"
+        style={{
+          maxWidth: "800px",
+          margin: "40px auto",
+          padding: "40px 32px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+          boxShadow: "var(--shadow-hover)",
+          border: "1px solid var(--border-light)",
+        }}
+      >
+        {hatchStep === "choose" && (
+          <>
+            <div style={{ textAlign: "center" }}>
+              <span style={{ fontSize: "40px" }}>🥚</span>
+              <h2 style={{ fontSize: "28px", fontFamily: "var(--font-header)", marginTop: "12px" }}>
+                Select Your Companionship Egg
+              </h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: "14px", maxWidth: "560px", margin: "8px auto 0" }}>
+                Welcome! To begin your mental health pacing, select a serene egg. Different eggs hold distinct autonomic coping personalities.
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginTop: "16px" }} className="eggs-grid">
+              {EGGS.map((egg) => {
+                const isSel = selectedEgg?.id === egg.id;
+                return (
+                  <div
+                    key={egg.id}
+                    onClick={() => setSelectedEgg(egg)}
+                    className="glass-card egg-card"
+                    style={{
+                      padding: "20px",
+                      cursor: "pointer",
+                      border: isSel ? `2.5px solid ${egg.color}` : "1.5px solid var(--border-light)",
+                      backgroundColor: isSel ? `rgba(${egg.id === "sage" ? "90,148,117" : egg.id === "sapphire" ? "91,127,166" : egg.id === "amethyst" ? "169,146,196" : "192,118,90"}, 0.05)` : "var(--bg-surface)",
+                      boxShadow: isSel ? `0 8px 24px ${egg.glow}` : "var(--shadow-subtle)",
+                      transition: "all 0.25s ease",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      textAlign: "center",
+                      gap: "12px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "60px",
+                        height: "76px",
+                        borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                        backgroundColor: egg.color,
+                        boxShadow: `0 4px 16px ${egg.glow}`,
+                        transition: "transform 0.2s",
+                      }}
+                      className="egg-render"
+                    />
+                    <div>
+                      <h4 style={{ fontSize: "16px", fontWeight: "700" }}>{egg.label}</h4>
+                      <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "4px", lineHeight: "1.4" }}>
+                        {egg.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => {
+                if (!selectedEgg) {
+                  alert("Please choose an egg to hatch!");
+                  return;
+                }
+                setHatchStep("tap");
+              }}
+              className="btn-primary"
+              style={{ alignSelf: "center", padding: "12px 32px", marginTop: "16px" }}
+              disabled={!selectedEgg}
+            >
+              Continue with Egg
+            </button>
+          </>
+        )}
+
+        {hatchStep === "tap" && selectedEgg && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "28px" }}>
+            <div>
+              <h2 style={{ fontSize: "26px", fontFamily: "var(--font-header)" }}>
+                Help Your Companion Hatch!
+              </h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: "14px", maxWidth: "480px", margin: "6px auto 0" }}>
+                The egg is warm and active. **Tap rapidly on the egg 5 times** to help your baby Sparky break out of the shell!
+              </p>
+            </div>
+
+            {/* Tap count force */}
+            <div style={{ fontSize: "14px", fontWeight: "700", color: selectedEgg.color }}>
+              CRACK FORCE: {tapCount} / 5
+            </div>
+
+            {/* Glowing Cracking Egg container */}
+            <div
+              onClick={handleEggTap}
+              style={{
+                position: "relative",
+                width: "160px",
+                height: "210px",
+                borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+                backgroundColor: selectedEgg.color,
+                boxShadow: `0 0 40px ${selectedEgg.glow}, inset 0 -12px 24px rgba(0,0,0,0.15)`,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transform: isHatchingShaking ? "scale(0.95) rotate(4deg)" : "scale(1)",
+                transition: "transform 0.1s ease",
+              }}
+              className="cracking-egg-sphere"
+            >
+              {/* crack marks based on tap count */}
+              {tapCount >= 1 && (
+                <div style={{ position: "absolute", width: "100%", height: "100%", backgroundImage: "radial-gradient(circle, #2C2F35 1px, transparent 2px)", opacity: 0.6 }} />
+              )}
+              {tapCount >= 3 && (
+                <div style={{ position: "absolute", width: "80%", height: "80%", borderTop: "2px solid #2C2F35", borderBottom: "2px solid #2C2F35", transform: "rotate(45deg)", opacity: 0.8 }} />
+              )}
+
+              {/* Floating Crack Texts */}
+              {floatingTexts.map((ft) => (
+                <span
+                  key={ft.id}
+                  style={{
+                    position: "absolute",
+                    left: `${ft.x}px`,
+                    top: `${ft.y}px`,
+                    color: "#FFFFFF",
+                    fontSize: "14px",
+                    fontWeight: "900",
+                    pointerEvents: "none",
+                    animation: "floatUp 0.8s forwards",
+                    textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  {ft.text}
+                </span>
+              ))}
+
+              <span style={{ fontSize: "36px", pointerEvents: "none" }}>❤️</span>
+            </div>
+
+            <div style={{ width: "100%", maxWidth: "320px", height: "8px", backgroundColor: "var(--border-light)", borderRadius: "4px", overflow: "hidden" }}>
+              <div
+                style={{
+                  width: `${(tapCount / 5) * 100}%`,
+                  height: "100%",
+                  backgroundColor: selectedEgg.color,
+                  transition: "width 0.2s ease",
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {hatchStep === "name" && selectedEgg && (
+          <form onSubmit={handleAdoptSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div style={{ textAlign: "center" }}>
+              <h2 style={{ fontSize: "28px", fontFamily: "var(--font-header)", color: "var(--color-success)" }}>
+                🎉 EGG HATCHED SUCCESSFULLY!
+              </h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "6px" }}>
+                A cute baby Sparky emerged! Name your new partner and select its baseline demeanor to finalize adoption.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center", margin: "12px 0" }}>
+              <Mascot pose="celebrating-success" size={170} dialogue="Hi! I'm so excited to be here!" interactive={false} />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>
+                  Companion Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Sparky"
+                  value={mascotName}
+                  onChange={(e) => setMascotName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>
+                  Companion Demeanor
+                </label>
+                <select
+                  value={mascotDemeanor}
+                  onChange={(e) => setMascotDemeanor(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: "12px",
+                    border: "1.5px solid var(--border-input)",
+                    backgroundColor: "var(--bg-surface)",
+                    color: "var(--text-primary)",
+                    fontSize: "14px",
+                    outline: "none",
+                  }}
+                >
+                  <option value="Cheerfully Energetic">Cheerfully Energetic</option>
+                  <option value="Calming & Stoic">Calming & Stoic</option>
+                  <option value="Quiet & Pensive">Quiet & Pensive</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" className="btn-primary" style={{ alignSelf: "center", padding: "12px 32px", marginTop: "10px" }}>
+              Begin Adoption!
+            </button>
+          </form>
+        )}
+
+        {hatchStep === "persona" && (
+          <form onSubmit={handlePersonaSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div>
+              <h2 style={{ fontSize: "24px", fontFamily: "var(--font-header)" }}>
+                Establish Your Diagnostics Persona
+              </h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginTop: "4px" }}>
+                To detect cognitive shifts and personalize Sparky&apos;s wellness advice, we require a validated clinical profile.
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Age</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 24"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Occupation / Focus</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Student / Engineer"
+                  value={occupation}
+                  onChange={(e) => setOccupation(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Typical Sleep Hours</label>
+                <select
+                  value={sleepHours}
+                  onChange={(e) => setSleepHours(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: "12px",
+                    border: "1.5px solid var(--border-input)",
+                    backgroundColor: "var(--bg-surface)",
+                    color: "var(--text-primary)",
+                    fontSize: "14px",
+                    outline: "none",
+                  }}
+                >
+                  <option value="<5 hours">&lt;5 hours (Risk range)</option>
+                  <option value="5-6 hours">5-6 hours (Moderate debt)</option>
+                  <option value="7-8 hours">7-8 hours (Balanced range)</option>
+                  <option value="8+ hours">8+ hours (High replenishment)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Primary Health Goal</label>
+                <select
+                  value={mentalGoal}
+                  onChange={(e) => setMentalGoal(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: "12px",
+                    border: "1.5px solid var(--border-input)",
+                    backgroundColor: "var(--bg-surface)",
+                    color: "var(--text-primary)",
+                    fontSize: "14px",
+                    outline: "none",
+                  }}
+                >
+                  <option value="Reduce Panic Sparks">Reduce Panic Sparks</option>
+                  <option value="Achieve Calmer Baselines">Achieve Calmer Baselines</option>
+                  <option value="Build Self-Compassion">Build Self-Compassion</option>
+                  <option value="Gain Focus Momentum">Gain Focus Momentum</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Sliders */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                  Daily Autonomic Stress Level: <strong style={{ color: "var(--color-error)" }}>{stressLevel}/10</strong>
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={stressLevel}
+                  onChange={(e) => setStressLevel(Number(e.target.value))}
+                  style={{ cursor: "pointer", height: "6px" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "4px" }}>
+                  Self-Care Commitment: <strong style={{ color: "var(--color-success)" }}>{selfCareScale}/10</strong>
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={selfCareScale}
+                  onChange={(e) => setSelfCareScale(Number(e.target.value))}
+                  style={{ cursor: "pointer", height: "6px" }}
+                />
+              </div>
+            </div>
+
+            {/* Trigger Multi-select pills */}
+            <div>
+              <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "8px" }}>
+                Active Anxiety Triggers
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {["Academic Pressure", "Social Anxiety", "Work Burnout", "Insomnia", "Health Anxiety", "General Worries"].map((tr) => {
+                  const active = tempTriggers.includes(tr);
+                  return (
+                    <button
+                      type="button"
+                      key={tr}
+                      onClick={() => toggleTrigger(tr)}
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: "14px",
+                        border: active ? "2.5px solid var(--color-accent)" : "1.5px solid var(--border-light)",
+                        backgroundColor: active ? "rgba(169, 146, 196, 0.08)" : "var(--bg-surface)",
+                        color: active ? "var(--color-accent)" : "var(--text-secondary)",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      {tr}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button type="submit" className="btn-primary" style={{ alignSelf: "center", padding: "12px 32px", marginTop: "10px" }}>
+              Establish Persona & Enter SereneMind
+            </button>
+          </form>
+        )}
+
+        <style jsx global>{`
+          .egg-card:hover {
+            transform: translateY(-4px);
+          }
+          .egg-card:hover .egg-render {
+            transform: scale(1.05) rotate(-2deg);
+          }
+          @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-40px) scale(0.85); opacity: 0; }
+          }
+          @media (max-width: 600px) {
+            .eggs-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // RENDER: Normal dashboard (Both Complete)
+  // ==========================================
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       {/* 1. Welcoming Greeting Banner */}
@@ -95,11 +747,27 @@ export default function DashboardPage() {
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <h2 style={{ fontSize: "30px", fontFamily: "var(--font-header)" }}>
-            Welcome back, Rishabh
-          </h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "16px", maxWidth: "600px" }}>
-            Hope you are having a peaceful day. Sparky is here to support you. Select your current mood below to check in!
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <h2 style={{ fontSize: "30px", fontFamily: "var(--font-header)" }}>
+              Welcome back, Rishabh
+            </h2>
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                backgroundColor: "rgba(125, 170, 143, 0.12)",
+                color: "var(--color-success)",
+                padding: "4px 10px",
+                borderRadius: "12px",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
+              LVL {mascotProgressInfo.level} {mascotProgressInfo.title}
+            </span>
+          </div>
+          <p style={{ color: "var(--text-secondary)", fontSize: "16px", maxWidth: "600px", lineHeight: "1.5" }}>
+            Hope you are having a peaceful day. Your companion **{adoptedMascotState?.name || "Sparky"}** is currently active as **{mascotProgressInfo.state}** by your side. Select your current mood below to check in!
           </p>
         </div>
         <div style={{ paddingRight: "20px" }}>
