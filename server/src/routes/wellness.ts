@@ -105,6 +105,96 @@ router.delete("/", requireAuth, async (req: AuthRequest, res: Response): Promise
   }
 });
 
+// ── GET /api/wellness/streak ──────────────────────────────────────────────────
+// Returns the consecutive day streak of active wellness logging
+router.get("/streak", requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.user!.id;
+  const tz = (req.query.tz as string) || "UTC";
+
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT ((created_at AT TIME ZONE $2)::date)::text as log_date
+       FROM wellness_logs
+       WHERE user_id = $1
+       ORDER BY log_date DESC`,
+      [userId, tz]
+    );
+
+    const dates: string[] = result.rows.map((r) => r.log_date);
+
+    if (dates.length === 0) {
+      res.json({ streak: 0 });
+      return;
+    }
+
+    // Get "today" in the requested timezone
+    let todayStr: string;
+    try {
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      });
+      const parts = formatter.formatToParts(new Date());
+      const year = parts.find(p => p.type === 'year')?.value;
+      const month = parts.find(p => p.type === 'month')?.value;
+      const day = parts.find(p => p.type === 'day')?.value;
+      todayStr = `${year}-${month}-${day}`;
+    } catch (e) {
+      const d = new Date();
+      const yyyy = d.getUTCFullYear();
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(d.getUTCDate()).padStart(2, '0');
+      todayStr = `${yyyy}-${mm}-${dd}`;
+    }
+
+    const parseDateStr = (str: string) => {
+      const [y, m, d] = str.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
+
+    const formatToYMD = (d: Date) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    const todayDate = parseDateStr(todayStr);
+    const yesterdayDate = new Date(todayDate);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = formatToYMD(yesterdayDate);
+
+    // If the latest log date is not today and not yesterday, streak is broken
+    const latestLogStr = dates[0];
+    if (latestLogStr !== todayStr && latestLogStr !== yesterdayStr) {
+      res.json({ streak: 0 });
+      return;
+    }
+
+    // Count consecutive days going back
+    let streak = 0;
+    let currentCheckDate = parseDateStr(latestLogStr);
+
+    while (true) {
+      const checkStr = formatToYMD(currentCheckDate);
+      if (dates.includes(checkStr)) {
+        streak++;
+        currentCheckDate.setDate(currentCheckDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    res.json({ streak });
+  } catch (err) {
+    console.error("GET /api/wellness/streak error:", err);
+    res.status(500).json({ error: "Failed to calculate streak." });
+  }
+});
+
+
 // Helper: format Date to readable "May 22, 2026 at 1:45 PM"
 function formatDate(date: Date): string {
   return new Date(date).toLocaleDateString("en-US", {
