@@ -59,7 +59,7 @@ The application is structured into 9 core pages/workspaces:
 *   **Description**: Deep-dive analytics dashboard.
 *   **Key Capabilities**: Mood tracking charts, heatmaps, and correlation insights (e.g., sleep vs. stress).
 
-### 3.8. Crisis Speech (SOS System)
+### 3.8. Crisis SOS
 *   **Description**: High-priority immediate help interface.
 *   **Key Capabilities**: Triggered automatically or manually, halts AI conversational generation, and provides immediate emergency contacts and coping mechanisms.
 
