@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Mascot, { HamsterPose } from "../../components/Mascot";
+import { api, ChatMessage } from "../../lib/api";
+import { v4 as uuidv4 } from "uuid";
 
 interface Message {
   id: string;
@@ -12,12 +14,14 @@ interface Message {
 }
 
 export default function ChatbotPage() {
-  const [messages, setMessages] = useState<Message[]>([
+  const [sessionId] = useState(() => uuidv4());
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: "1",
+      id: "welcome",
+      sessionId,
       sender: "sparky",
       text: "Hello! I'm Sparky, your SereneMind AI companion. Whether you want to vent, practice a coping mechanism, or just chat, I'm here for you.",
-      timestamp: "10:00 AM",
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
   const [inputVal, setInputVal] = useState("");
@@ -133,34 +137,24 @@ export default function ChatbotPage() {
     recognition.start();
   };
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputVal.trim()) return;
 
     const userMsgText = inputVal.trim();
-    const userMsg: Message = {
+    const userMsg: ChatMessage = {
       id: Math.random().toString(),
+      sessionId,
       sender: "user",
       text: userMsgText,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
     setMessages((prev) => [...prev, userMsg]);
     setInputVal("");
     checkSafetyTriggers(userMsgText);
 
-    // Save Chat record into unified Wellness Timeline logs in localStorage
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }) + " at " + now.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-
+    // Persist user message to DB
     let detectedSentiment = "Neutral";
     if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good") || userMsgText.toLowerCase().includes("glad")) {
       detectedSentiment = "Positive";
@@ -170,25 +164,15 @@ export default function ChatbotPage() {
       detectedSentiment = "Stressed";
     }
 
-    const newLog = {
-      id: String(Date.now()),
-      type: "chat" as const,
-      title: `Companion chat with Sparky`,
-      preview: `Vent details: "${userMsgText.length > 80 ? userMsgText.slice(0, 80) + '...' : userMsgText}"`,
-      date: formattedDate,
+    // Save user message to DB in background
+    api.post("/api/chats", { sessionId, sender: "user", text: userMsgText }).catch(console.error);
+    // Save to wellness timeline
+    api.post("/api/wellness", {
+      type: "chat",
+      title: "Companion chat with Sparky",
+      preview: `Vent details: "${userMsgText.length > 80 ? userMsgText.slice(0, 80) + "..." : userMsgText}"`,
       sentiment: detectedSentiment,
-    };
-
-    const savedLogs = localStorage.getItem("wellness-logs");
-    let currentLogs = [];
-    if (savedLogs) {
-      try {
-        currentLogs = JSON.parse(savedLogs);
-      } catch (e) {
-        currentLogs = [];
-      }
-    }
-    localStorage.setItem("wellness-logs", JSON.stringify([newLog, ...currentLogs]));
+    }).catch(console.error);
 
     // Swap mascot to cognitive head-scratching typing state
     setIsTyping(true);
@@ -196,7 +180,7 @@ export default function ChatbotPage() {
     setMascotDialogue("Let me think about that carefully...");
 
     // Generate companion response
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsTyping(false);
       const companionReaction = getReactivePose(userMsgText);
       setMascotPose(companionReaction.pose);
@@ -213,15 +197,17 @@ export default function ChatbotPage() {
         sparkyReply = "That's fantastic! Celebrating positive moments is so critical for cognitive balance. What made you feel so bright today?";
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Math.random().toString(),
-          sender: "sparky",
-          text: sparkyReply,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
+      const sparkyMsg: ChatMessage = {
+        id: Math.random().toString(),
+        sessionId,
+        sender: "sparky",
+        text: sparkyReply,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+
+      setMessages((prev) => [...prev, sparkyMsg]);
+      // Persist Sparky reply to DB
+      api.post("/api/chats", { sessionId, sender: "sparky", text: sparkyReply }).catch(console.error);
     }, 1500);
   };
 

@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Mascot from "../../components/Mascot";
+import { api, WellnessLog } from "../../lib/api";
 
 interface LogItem {
   id: string;
-  type: "chat" | "journal" | "exercise";
+  type: "chat" | "journal" | "exercise" | "mood";
   title: string;
   preview: string;
   date: string;
@@ -64,26 +65,22 @@ export default function HistoryPage() {
   // Voice Input State
   const [isListening, setIsListening] = useState(false);
 
-  // Sync state with localStorage on mount
+  // Fetch wellness logs from DB on mount
   useEffect(() => {
-    const saved = localStorage.getItem("wellness-logs");
-    if (saved) {
+    async function fetchLogs() {
       try {
-        setLogs(JSON.parse(saved));
-      } catch (e) {
-        setLogs(DEFAULT_LOGS);
+        const data = await api.get<{ logs: WellnessLog[] }>("/api/wellness");
+        setLogs(data.logs);
+      } catch (err) {
+        console.error("Failed to fetch wellness logs:", err);
+        setLogs([]);
       }
-    } else {
-      setLogs(DEFAULT_LOGS);
-      localStorage.setItem("wellness-logs", JSON.stringify(DEFAULT_LOGS));
     }
+    fetchLogs();
   }, []);
 
-  // Update localStorage whenever logs change
-  const saveLogs = (newLogs: LogItem[]) => {
-    setLogs(newLogs);
-    localStorage.setItem("wellness-logs", JSON.stringify(newLogs));
-  };
+
+
 
   // Speech Recognition Speech-to-text dictation
   const toggleVoiceInput = () => {
@@ -129,52 +126,51 @@ export default function HistoryPage() {
     recognition.start();
   };
 
-  const handleAddLog = (e: React.FormEvent) => {
+  const handleAddLog = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTitle || !formPreview) {
       alert("Please fill in all the details.");
       return;
     }
 
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }) + " at " + now.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-    const newLog: LogItem = {
-      id: String(Date.now()),
-      type: formType,
-      title: formTitle,
-      preview: formPreview,
-      date: formattedDate,
-      sentiment: formSentiment,
-    };
-
-    const updated = [newLog, ...logs];
-    saveLogs(updated);
-
-    // Reset Form
-    setFormTitle("");
-    setFormPreview("");
-    setShowAddForm(false);
-  };
-
-  const handleDeleteLog = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this log?")) {
-      const updated = logs.filter((log) => log.id !== id);
-      saveLogs(updated);
+    try {
+      const newLog = await api.post<WellnessLog>("/api/wellness", {
+        type: formType,
+        title: formTitle,
+        preview: formPreview,
+        sentiment: formSentiment,
+      });
+      setLogs((prev) => [newLog, ...prev]);
+      setFormTitle("");
+      setFormPreview("");
+      setShowAddForm(false);
+    } catch (err) {
+      console.error("Failed to add log:", err);
+      alert("Could not save this entry. Please try again.");
     }
   };
 
-  const handleClearAll = () => {
-    if (window.confirm("Are you sure you want to clear your timeline? This cannot be undone.")) {
-      saveLogs([]);
+  const handleDeleteLog = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this log?")) {
+      try {
+        await api.delete(`/api/wellness/${id}`);
+        setLogs((prev) => prev.filter((log) => log.id !== id));
+      } catch (err) {
+        console.error("Failed to delete log:", err);
+        alert("Could not delete this entry.");
+      }
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (window.confirm("Are you sure you want to clear your entire timeline? This cannot be undone.")) {
+      try {
+        await api.delete("/api/wellness");
+        setLogs([]);
+      } catch (err) {
+        console.error("Failed to clear logs:", err);
+        alert("Could not clear the timeline.");
+      }
     }
   };
 
@@ -186,8 +182,15 @@ export default function HistoryPage() {
         setAiSummary("No logs recorded this month yet! Start by recording a daily check-in or completing a breathing exercise.");
         return;
       }
+      const positiveCount = logs.filter(l => l.sentiment === "Positive").length;
+      const stressedCount = logs.filter(l => l.sentiment === "Stressed" || l.sentiment === "Anxious").length;
+      const journalCount = logs.filter(l => l.type === "journal").length;
+      const exerciseCount = logs.filter(l => l.type === "exercise").length;
+
       setAiSummary(
-        `Based on your ${logs.length} check-ins this period, Sparky notices you are actively utilizing coping mechanisms. You have demonstrated healthy mindfulness by balancing Stressed intervals with breathing pacers and reflective journal spacing. Keep pacing yourself daily!`
+        `Based on your ${logs.length} check-ins this period, Sparky notices you have logged ${positiveCount} positive moments, ${journalCount} journal reflections, and ${exerciseCount} exercises. ` +
+        (stressedCount > 0 ? `You navigated ${stressedCount} challenging moments with resilience. ` : "") +
+        "You are actively utilizing coping mechanisms and demonstrating healthy mindfulness. Keep pacing yourself daily!"
       );
     }, 1500);
   };

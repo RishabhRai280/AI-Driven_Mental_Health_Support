@@ -2,76 +2,62 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Mascot from "../../components/Mascot";
-
-interface CalendarDay {
-  day: number;
-  mood?: "Calm" | "Anxious" | "Stressed" | "Sad" | "Energetic";
-  note: string;
-}
-
-const DEFAULT_CALENDAR: CalendarDay[] = Array.from({ length: 31 }, (_, i) => {
-  const dayNum = i + 1;
-  let mood: CalendarDay["mood"];
-  let note = `Day ${dayNum}: General daily check-in completed. Positive mental balance maintained.`;
-
-  if ([2, 9, 16, 23, 30].includes(dayNum)) {
-    mood = "Calm";
-    note = `Day ${dayNum}: Practiced visual deep breathing. Heart rate is calm and centered. Slept 8 hours.`;
-  } else if ([4, 11, 18, 25].includes(dayNum)) {
-    mood = "Anxious";
-    note = `Day ${dayNum}: Anxiety spark during peak hours. Practiced 5m box breathing pacing successfully.`;
-  } else if ([6, 13, 20, 27].includes(dayNum)) {
-    mood = "Stressed";
-    note = `Day ${dayNum}: Heavily stressed due to meeting tight deadlines. Shared dialogue logs with Sparky.`;
-  } else if ([7, 14, 21, 28].includes(dayNum)) {
-    mood = "Sad";
-    note = `Day ${dayNum}: Low energy day. Wrote an automated journal, focused on self-compassion.`;
-  } else {
-    mood = "Energetic";
-    note = `Day ${dayNum}: Full of positive momentum! Completed a 30m outdoor mindfulness walk.`;
-  }
-
-  return { day: dayNum, mood, note };
-});
+import { api, CalendarDay } from "../../lib/api";
 
 export default function AnalysisPage() {
-  const [days, setDays] = useState<CalendarDay[]>([]);
+  const [calendar, setCalendar] = useState<Record<number, CalendarDay>>({});
   const [hoveredDay, setHoveredDay] = useState<CalendarDay | null>(null);
-  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   // Form states for editing selected day
-  const [editMood, setEditMood] = useState<CalendarDay["mood"]>("Calm");
-  const [editNote, setEditNote] = useState("");
+  const [dayMoodEdit, setDayMoodEdit] = useState<CalendarDay["mood"] | "">("");
+  const [dayNoteEdit, setDayNoteEdit] = useState("");
 
   // Voice Input State
   const [isListening, setIsListening] = useState(false);
 
-  // Load from localStorage on mount
+  // Fetch calendar from DB on mount
   useEffect(() => {
-    const saved = localStorage.getItem("mood-calendar");
-    if (saved) {
+    async function fetchCalendar() {
       try {
-        setDays(JSON.parse(saved));
-      } catch (e) {
-        setDays(DEFAULT_CALENDAR);
+        const data = await api.get<{ days: CalendarDay[]; month: number; year: number }>("/api/calendar");
+        const calMap: Record<number, CalendarDay> = {};
+        data.days.forEach((d) => { calMap[d.day] = d; });
+        setCalendar(calMap);
+      } catch (err) {
+        console.error("Failed to fetch mood calendar:", err);
       }
-    } else {
-      setDays(DEFAULT_CALENDAR);
-      localStorage.setItem("mood-calendar", JSON.stringify(DEFAULT_CALENDAR));
     }
+    fetchCalendar();
   }, []);
 
   // Update form inputs when selectedDay changes
   useEffect(() => {
-    if (selectedDay) {
-      setEditMood(selectedDay.mood || "Calm");
-      setEditNote(selectedDay.note);
+    if (selectedDay !== null) {
+      const dayData = calendar[selectedDay];
+      setDayMoodEdit(dayData?.mood || "");
+      setDayNoteEdit(dayData?.note || "");
     }
-  }, [selectedDay]);
+  }, [selectedDay, calendar]);
 
-  const saveDays = (newDays: CalendarDay[]) => {
-    setDays(newDays);
-    localStorage.setItem("mood-calendar", JSON.stringify(newDays));
+  const handleDaySave = async () => {
+    if (selectedDay === null) return;
+    try {
+      await api.put(`/api/calendar/${selectedDay}`, {
+        mood: dayMoodEdit || null,
+        note: dayNoteEdit,
+      });
+      setCalendar((prev) => ({
+        ...prev,
+        [selectedDay]: { day: selectedDay, mood: (dayMoodEdit as any) || null, note: dayNoteEdit },
+      }));
+      setSelectedDay(null);
+      setDayMoodEdit("");
+      setDayNoteEdit("");
+    } catch (err) {
+      console.error("Failed to save calendar day:", err);
+      alert("Could not save. Please try again.");
+    }
   };
 
   // Speech Recognition Speech-to-text dictation
@@ -110,7 +96,7 @@ export default function AnalysisPage() {
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       if (transcript) {
-        setEditNote((prev) => prev + (prev ? " " : "") + transcript.trim() + ".");
+        setDayNoteEdit((prev) => prev + (prev ? " " : "") + transcript.trim() + ".");
       }
     };
 
@@ -120,25 +106,17 @@ export default function AnalysisPage() {
 
   const handleUpdateDay = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedDay) return;
-
-    const updated = days.map((d) => {
-      if (d.day === selectedDay.day) {
-        return { ...d, mood: editMood, note: editNote };
-      }
-      return d;
-    });
-
-    saveDays(updated);
-    setSelectedDay(null);
+    handleDaySave();
   };
 
   const handleResetCalendar = () => {
-    if (window.confirm("Are you sure you want to reset your mood calendar to mock data?")) {
-      saveDays(DEFAULT_CALENDAR);
-      setSelectedDay(null);
+    if (window.confirm("Are you sure you want to clear your mood calendar?")) {
+      setCalendar({});
     }
   };
+
+  // Derive an array from calendar map for calculations
+  const days = Object.values(calendar);
 
   // Recalculate mood ratios in real-time!
   const moodRatios = useMemo(() => {
@@ -146,7 +124,7 @@ export default function AnalysisPage() {
     
     const totals = { Calm: 0, Energetic: 0, Sad: 0, Anxious: 0, Stressed: 0 };
     days.forEach(d => {
-      if (d.mood) totals[d.mood] += 1;
+      if (d.mood) totals[d.mood as keyof typeof totals] += 1;
     });
 
     const list = [
@@ -158,13 +136,13 @@ export default function AnalysisPage() {
     ];
 
     return list.map(item => {
-      const count = totals[item.label as CalendarDay["mood"] & string] || 0;
-      const percent = Math.round((count / days.length) * 100);
+      const count = totals[item.label as keyof typeof totals] || 0;
+      const percent = days.length > 0 ? Math.round((count / days.length) * 100) : 0;
       return { ...item, percent };
     });
   }, [days]);
 
-  // Recalculate stable baseline index in real-time! (Calm + Energetic share stable ratios)
+  // Recalculate stable baseline index in real-time!
   const baselinePercentage = useMemo(() => {
     if (days.length === 0) return 0;
     const stable = days.filter(d => d.mood === "Calm" || d.mood === "Energetic").length;
@@ -292,19 +270,21 @@ export default function AnalysisPage() {
             <div />
             <div />
 
-            {/* Calendar Days */}
-            {days.map((d) => {
-              const color = getMoodColor(d.mood);
-              const glowColor = getMoodGlow(d.mood);
-              const isHovered = hoveredDay?.day === d.day;
-              const isSelected = selectedDay?.day === d.day;
+            {/* Calendar Days — iterate 1-31 */}
+            {Array.from({ length: 31 }, (_, i) => i + 1).map((dayNum) => {
+              const d = calendar[dayNum];
+              const mood = d?.mood as CalendarDay["mood"] | undefined;
+              const color = getMoodColor(mood);
+              const glowColor = getMoodGlow(mood);
+              const isHovered = hoveredDay?.day === dayNum;
+              const isSelected = selectedDay === dayNum;
               
               return (
                 <div
-                  key={d.day}
-                  onMouseEnter={() => setHoveredDay(d)}
+                  key={dayNum}
+                  onMouseEnter={() => setHoveredDay(d ?? { day: dayNum, mood: null, note: "" })}
                   onMouseLeave={() => setHoveredDay(null)}
-                  onClick={() => setSelectedDay(d)}
+                  onClick={() => setSelectedDay(dayNum)}
                   style={{
                     aspectRatio: "1",
                     borderRadius: "14px",
@@ -312,7 +292,7 @@ export default function AnalysisPage() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#FFFFFF",
+                    color: mood ? "#FFFFFF" : "var(--text-secondary)",
                     fontSize: "14px",
                     fontWeight: "600",
                     cursor: "pointer",
@@ -332,7 +312,7 @@ export default function AnalysisPage() {
                   }}
                   className="heatmap-day-block"
                 >
-                  {d.day}
+                  {dayNum}
                 </div>
               );
             })}
@@ -469,7 +449,7 @@ export default function AnalysisPage() {
             <form onSubmit={handleUpdateDay} style={{ width: "100%", textAlign: "left", display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h4 style={{ fontSize: "16px", fontWeight: "600", color: "var(--color-primary)" }}>
-                  Edit Day {selectedDay.day} Telemetry
+                  Edit Day {selectedDay} Telemetry
                 </h4>
                 <button
                   type="button"
@@ -483,8 +463,8 @@ export default function AnalysisPage() {
               <div>
                 <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Select Day Mood</label>
                 <select
-                  value={editMood}
-                  onChange={(e) => setEditMood(e.target.value as any)}
+                  value={dayMoodEdit ?? ""}
+                  onChange={(e) => setDayMoodEdit(e.target.value as any)}
                   style={{
                     width: "100%",
                     padding: "12px",
@@ -530,8 +510,8 @@ export default function AnalysisPage() {
                   </button>
                 </div>
                 <textarea
-                  value={editNote}
-                  onChange={(e) => setEditNote(e.target.value)}
+                  value={dayNoteEdit}
+                  onChange={(e) => setDayNoteEdit(e.target.value)}
                   disabled={isListening}
                   rows={4}
                   required

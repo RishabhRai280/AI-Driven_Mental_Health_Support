@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Mascot, { HamsterPose } from "../../components/Mascot";
+import { useAuth } from "../../context/AuthContext";
+import { api, MascotData, PersonaData } from "../../lib/api";
 
 type Mood = "Calm" | "Anxious" | "Stressed" | "Sad" | "Energetic";
 
@@ -31,9 +33,12 @@ const EGGS = [
 ];
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+
   // Navigation & Adoption States
   const [hasAdoptedMascot, setHasAdoptedMascot] = useState(true);
   const [hasFilledPersona, setHasFilledPersona] = useState(true);
+  const [isLoadingMascot, setIsLoadingMascot] = useState(true);
 
   // Egg Selection states
   const [selectedEgg, setSelectedEgg] = useState<typeof EGGS[0] | null>(null);
@@ -95,27 +100,37 @@ export default function DashboardPage() {
     },
   ];
 
-  // Check adoption on mount
+  // Check adoption on mount — fetch from DB
   useEffect(() => {
-    const adopted = localStorage.getItem("adopted-mascot");
-    const personaData = localStorage.getItem("user-persona");
-    if (adopted) {
+    async function fetchMascotData() {
       try {
-        setAdoptedMascotState(JSON.parse(adopted));
-        setHasAdoptedMascot(true);
-      } catch (e) {
-        setHasAdoptedMascot(false);
-      }
-    } else {
-      setHasAdoptedMascot(false);
-      setHatchStep("choose");
-    }
+        const data = await api.get<{ mascot: MascotData | null; persona: PersonaData | null }>("/api/mascot");
+        if (data.mascot) {
+          setAdoptedMascotState({
+            name: data.mascot.name,
+            eggType: data.mascot.eggType,
+            initialPersonality: data.mascot.personality,
+            level: data.mascot.level,
+          });
+          setHasAdoptedMascot(true);
+        } else {
+          setHasAdoptedMascot(false);
+          setHatchStep("choose");
+        }
 
-    if (personaData) {
-      setHasFilledPersona(true);
-    } else {
-      setHasFilledPersona(false);
+        if (data.persona) {
+          setHasFilledPersona(true);
+        } else {
+          setHasFilledPersona(false);
+        }
+      } catch (err) {
+        console.error("Failed to fetch mascot data:", err);
+        setHasAdoptedMascot(false);
+      } finally {
+        setIsLoadingMascot(false);
+      }
     }
+    fetchMascotData();
   }, []);
 
   // Evolution engine mapping user self-care progression to mascot evolution updates
@@ -196,21 +211,10 @@ export default function DashboardPage() {
     };
   }, [isBreathingActive]);
 
-  const handleMoodSelect = (moodItem: typeof moods[0]) => {
+  // Wellness log saved to DB
+  const handleMoodSelect = async (moodItem: typeof moods[0]) => {
     setSelectedMood(moodItem.label);
     setMascotPose(moodItem.pose);
-
-    // Save Mood Check-in log directly into the unified Wellness Timeline logs in localStorage
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }) + " at " + now.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
 
     let detectedSentiment = "Neutral";
     if (moodItem.label === "Calm" || moodItem.label === "Energetic") {
@@ -221,30 +225,18 @@ export default function DashboardPage() {
       detectedSentiment = "Stressed";
     }
 
-    const newLog = {
-      id: String(Date.now()),
-      type: "journal" as const,
-      title: `Dashboard Mood Checked-in: ${moodItem.label}`,
-      preview: `Checked in feeling ${moodItem.label} on the main dashboard. Sparky companion noted: "${moodItem.dialogue}"`,
-      date: formattedDate,
-      sentiment: detectedSentiment,
-    };
-
-    // Load and update logs
-    const savedLogs = localStorage.getItem("wellness-logs");
-    let currentLogs = [];
-    if (savedLogs) {
-      try {
-        currentLogs = JSON.parse(savedLogs);
-      } catch (e) {
-        currentLogs = [];
-      }
+    try {
+      await api.post("/api/wellness", {
+        type: "mood",
+        title: `Dashboard Mood Check-in: ${moodItem.label}`,
+        preview: `Checked in feeling ${moodItem.label} on the main dashboard. Sparky companion noted: "${moodItem.dialogue}"`,
+        sentiment: detectedSentiment,
+      });
+      alert(`Sparky logged your "${moodItem.label}" check-in! Feel free to review it inside your Wellness Timeline logs.`);
+    } catch (err) {
+      console.error("Failed to save mood log:", err);
+      alert(`Sparky noted your "${moodItem.label}" mood check-in!`);
     }
-    
-    localStorage.setItem("wellness-logs", JSON.stringify([newLog, ...currentLogs]));
-
-    // Reassuring Alert dialogue feedback
-    alert(`Sparky logged your "${moodItem.label}" check-in! Feel free to review it inside your Wellness Timeline logs.`);
   };
 
   const toggleBreathing = () => {
@@ -285,7 +277,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleAdoptSubmit = (e: React.FormEvent) => {
+  const handleAdoptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newMascot: AdoptedMascot = {
       name: mascotName.trim() || "Sparky",
@@ -294,32 +286,45 @@ export default function DashboardPage() {
       level: 1,
     };
 
-    localStorage.setItem("adopted-mascot", JSON.stringify(newMascot));
-    setAdoptedMascotState(newMascot);
-    setHasAdoptedMascot(true);
-    setHatchStep("persona");
+    try {
+      await api.post("/api/mascot", {
+        name: newMascot.name,
+        eggType: newMascot.eggType,
+        personality: newMascot.initialPersonality,
+        level: 1,
+      });
+      setAdoptedMascotState(newMascot);
+      setHasAdoptedMascot(true);
+      setHatchStep("persona");
+    } catch (err) {
+      console.error("Failed to save mascot:", err);
+      alert("Could not save mascot. Please try again.");
+    }
   };
 
-  const handlePersonaSubmit = (e: React.FormEvent) => {
+  const handlePersonaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!age || !occupation) {
       alert("Please fill out your Age and Occupation for a validated persona.");
       return;
     }
 
-    const newPersona: UserPersona = {
-      age,
-      occupation,
-      sleepHours,
-      stressLevel,
-      triggers: tempTriggers,
-      selfCareScale,
-      mentalGoal,
-    };
-
-    localStorage.setItem("user-persona", JSON.stringify(newPersona));
-    setHasFilledPersona(true);
-    alert(`Congratulations! ${mascotName} is now bonded, and your persona has been successfully established.`);
+    try {
+      await api.post("/api/mascot/persona", {
+        age: parseInt(age),
+        occupation,
+        sleepHours,
+        stressLevel,
+        selfCareScale,
+        mentalGoal,
+        triggers: tempTriggers,
+      });
+      setHasFilledPersona(true);
+      alert(`Congratulations! ${mascotName} is now bonded, and your persona has been successfully established.`);
+    } catch (err) {
+      console.error("Failed to save persona:", err);
+      alert("Could not save persona. Please try again.");
+    }
   };
 
   const toggleTrigger = (tr: string) => {
@@ -329,6 +334,16 @@ export default function DashboardPage() {
       setTempTriggers([...tempTriggers, tr]);
     }
   };
+
+  // Show loading skeleton while fetching mascot from DB
+  if (isLoadingMascot) {
+    return (
+      <div className="glass-card" style={{ maxWidth: "800px", margin: "40px auto", padding: "40px 32px", textAlign: "center" }}>
+        <div style={{ fontSize: "32px", marginBottom: "16px" }}>🌀</div>
+        <p style={{ color: "var(--text-secondary)" }}>Loading your companion...</p>
+      </div>
+    );
+  }
 
   // ==========================================
   // RENDER: Hatching Adoption Wizard Flow
@@ -749,7 +764,7 @@ export default function DashboardPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <h2 style={{ fontSize: "30px", fontFamily: "var(--font-header)" }}>
-              Welcome back, Rishabh
+          Welcome back, {user?.displayName || "Friend"}
             </h2>
             <span
               style={{

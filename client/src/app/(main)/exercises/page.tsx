@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Mascot from "../../components/Mascot";
+import { api } from "../../lib/api";
 
 interface Exercise {
   id: string;
@@ -108,45 +109,32 @@ export default function ExercisePage() {
     setCongratsMsg(null);
   };
 
-  const handleFinishSession = () => {
+  const handleFinishSession = async () => {
     if (!activeExercise) return;
 
-    // 1. Generate new wellness entry for History & Logs
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }) + " at " + now.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+    try {
+      // Save exercise log to DB
+      await api.post("/api/exercises/logs", {
+        exerciseId: activeExercise.id,
+        exerciseTitle: activeExercise.title,
+        category: activeExercise.category,
+        durationSecs: activeExercise.id === "1" ? 240 : activeExercise.id === "2" ? 300 : 480,
+      });
 
-    const newLog = {
-      id: String(Date.now()),
-      type: "exercise",
-      title: `Completed ${activeExercise.title}`,
-      preview: `Successfully completed a full pacing session using the ${activeExercise.title}. Breathing cycles restored autonomic baselines and reduced cognitive noise.`,
-      date: formattedDate,
-      sentiment: "Positive",
-    };
+      // Also add to unified wellness timeline
+      await api.post("/api/wellness", {
+        type: "exercise",
+        title: `Completed ${activeExercise.title}`,
+        preview: `Successfully completed a full pacing session using the ${activeExercise.title}. Breathing cycles restored autonomic baselines and reduced cognitive noise.`,
+        sentiment: "Positive",
+      });
 
-    // 2. Load past logs and prepend new exercise log
-    const savedLogs = localStorage.getItem("wellness-logs");
-    let currentLogs = [];
-    if (savedLogs) {
-      try {
-        currentLogs = JSON.parse(savedLogs);
-      } catch (e) {
-        currentLogs = [];
-      }
+      setCongratsMsg(`Excellent job completing the ${activeExercise.title}! Sparky has logged this practice inside your Wellness Timeline.`);
+    } catch (err) {
+      console.error("Failed to save exercise:", err);
+      setCongratsMsg(`Excellent job completing the ${activeExercise.title}!`);
     }
-    
-    localStorage.setItem("wellness-logs", JSON.stringify([newLog, ...currentLogs]));
 
-    // 3. Set congratulatory toast
-    setCongratsMsg(`Excellent job completing the ${activeExercise.title}! Sparky has logged this practice inside your Wellness Timeline.`);
     setActiveExercise(null);
     setIsPlaying(false);
 

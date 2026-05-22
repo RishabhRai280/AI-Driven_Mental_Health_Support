@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Mascot, { HamsterPose } from "../../components/Mascot";
+import { api } from "../../lib/api";
 
 export default function JournalingPage() {
   const [content, setContent] = useState("");
@@ -9,11 +10,12 @@ export default function JournalingPage() {
   const [sentiment, setSentiment] = useState<"Neutral" | "Positive" | "Anxious" | "Stressed">("Neutral");
   const [mascotPose, setMascotPose] = useState<HamsterPose>("thinking-deeply");
   const [saveStatus, setSaveStatus] = useState("Draft");
+  const currentJournalId = useRef<string | null>(null);
   
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false);
 
-  // Analyze sentiment in real-time based on textarea changes
+  // Analyze sentiment in real-time + autosave draft to DB
   useEffect(() => {
     if (!content.trim()) {
       setSentiment("Neutral");
@@ -25,8 +27,7 @@ export default function JournalingPage() {
     setSaveStatus("Saving...");
     setMascotPose("head-scratching");
 
-    // Real-time autosave mock
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       const lower = content.toLowerCase();
       let detectedSentiment: "Neutral" | "Positive" | "Anxious" | "Stressed" = "Neutral";
 
@@ -40,15 +41,35 @@ export default function JournalingPage() {
         detectedSentiment = "Stressed";
         setMascotPose("balancing-nut");
       } else {
-        setMascotPose("sleeping-content"); // Peaceful saved pose
+        setMascotPose("sleeping-content");
       }
 
       setSentiment(detectedSentiment);
-      setSaveStatus("Autosaved successfully");
+
+      // Autosave to DB as a draft (create new or update existing)
+      try {
+        if (currentJournalId.current) {
+          await api.put(`/api/journals/${currentJournalId.current}`, {
+            title: title || "Untitled Reflection",
+            body: content,
+            sentiment: detectedSentiment,
+          });
+        } else {
+          const res = await api.post<{ journal: { id: string } }>("/api/journals", {
+            title: title || "Untitled Reflection",
+            body: content,
+            sentiment: detectedSentiment,
+          });
+          currentJournalId.current = res.journal.id;
+        }
+        setSaveStatus("Autosaved successfully");
+      } catch {
+        setSaveStatus("Autosave failed");
+      }
     }, 1200);
 
     return () => clearTimeout(timer);
-  }, [content]);
+  }, [content, title]);
 
   // Speech Recognition Speech-to-text Dictator
   const toggleVoiceInput = () => {
@@ -96,53 +117,54 @@ export default function JournalingPage() {
     recognition.start();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim() && !content.trim()) {
       alert("Please enter a title or write some notes before saving.");
       return;
     }
 
     setSaveStatus("Saving reflection...");
-    
-    // Construct new timeline entry
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }) + " at " + now.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
 
-    const newLog = {
-      id: String(Date.now()),
-      type: "journal" as const,
-      title: title.trim() || "Untitled Reflection",
-      preview: content.trim() || "No reflection thoughts logged.",
-      date: formattedDate,
-      sentiment: sentiment,
-    };
-
-    // Load past entries
-    const savedLogs = localStorage.getItem("wellness-logs");
-    let currentLogs = [];
-    if (savedLogs) {
-      try {
-        currentLogs = JSON.parse(savedLogs);
-      } catch (e) {
-        currentLogs = [];
+    try {
+      if (currentJournalId.current) {
+        // Update existing journal
+        await api.put(`/api/journals/${currentJournalId.current}`, {
+          title: title.trim() || "Untitled Reflection",
+          body: content.trim(),
+          sentiment,
+        });
+      } else {
+        // Create new journal
+        const res = await api.post<{ journal: { id: string } }>("/api/journals", {
+          title: title.trim() || "Untitled Reflection",
+          body: content.trim() || "No reflection thoughts logged.",
+          sentiment,
+        });
+        currentJournalId.current = res.journal.id;
       }
-    }
 
-    localStorage.setItem("wellness-logs", JSON.stringify([newLog, ...currentLogs]));
+      // Also add to unified wellness timeline
+      await api.post("/api/wellness", {
+        type: "journal",
+        title: title.trim() || "Untitled Reflection",
+        preview: content.trim().slice(0, 180) || "No reflection thoughts logged.",
+        sentiment,
+        refId: currentJournalId.current,
+      });
 
-    setTimeout(() => {
       setSaveStatus("Saved to historical logs!");
       setMascotPose("sleeping-content");
-      alert(`"${newLog.title}" has been saved successfully to your Wellness Timeline!`);
-    }, 800);
+      alert(`"${title.trim() || "Untitled Reflection"}" has been saved successfully to your Wellness Timeline!`);
+      
+      // Reset for new entry
+      setTitle("");
+      setContent("");
+      currentJournalId.current = null;
+    } catch (err) {
+      console.error("Failed to save journal:", err);
+      setSaveStatus("Save failed");
+      alert("Could not save your journal entry. Please try again.");
+    }
   };
 
   const getSentimentStyle = () => {
