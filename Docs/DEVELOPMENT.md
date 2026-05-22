@@ -53,11 +53,11 @@ A multi-package structure isolates dependencies and keeps code modular:
 ```text
 /serenemind-root
 │
-├── /client                 # NEXT.JS OR REACT NATIVE APP (Engineer 1 & 2)
+├── /client                 # NEXT.JS (APP ROUTER) APP (Engineer 1 & 2)
+│   ├── /app                # App router views (Landing, Dashboard, Chat, etc.)
 │   ├── /components         # Highly reusable, atomic UI (Cards, Sliders, Charts)
-│   ├── /screens            # App views (Dashboard, Chat, Journal, Analytics)
 │   ├── /state              # Global state management (Zustand stores)
-│   ├── /styles             # Global design tokens (HSL variables, typography)
+│   ├── /styles             # Global design tokens (HSL CSS modules)
 │   └── package.json
 │
 ├── /server                 # CORE EXPRESS BACKEND API (Engineer 3)
