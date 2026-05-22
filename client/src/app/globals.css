@@ -27,22 +27,20 @@
   --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.04);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Dark Mode ("Moonlight Model") Backgrounds */
-    --background: #1E2228;        /* Midnight Slate */
-    --bg-surface: #2A2F38;        /* Soft Graphite card bubble */
-    --bg-nav: #252B33;            /* Deep Pewter nav background */
-    --bg-user-bubble: #3A5070;    /* Night Blue user bubble */
-    --border-light: #3A3F48;
+html.dark {
+  /* Dark Mode ("Moonlight Model") Backgrounds */
+  --background: #1E2228;        /* Midnight Slate */
+  --bg-surface: #2A2F38;        /* Soft Graphite card bubble */
+  --bg-nav: #252B33;            /* Deep Pewter nav background */
+  --bg-user-bubble: #3A5070;    /* Night Blue user bubble */
+  --border-light: #3A3F48;
 
-    /* Dark Mode Typography */
-    --text-primary: #EAE8E3;      /* Warm Cream text */
-    --text-secondary: #9CA3AF;    /* Cool Mist secondary text */
-    --border-input: #3A3F48;
-    --shadow-subtle: 0 4px 16px rgba(0, 0, 0, 0.1);
-    --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.15);
-  }
+  /* Dark Mode Typography */
+  --text-primary: #EAE8E3;      /* Warm Cream text */
+  --text-secondary: #9CA3AF;    /* Cool Mist secondary text */
+  --border-input: #3A3F48;
+  --shadow-subtle: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 /* Base Document Setup */
@@ -184,6 +182,15 @@ input:focus, textarea:focus {
   align-items: center;
   gap: 6px;
   margin-top: 6px;
+}
+
+/* Calming background drifting aura bubbles */
+.calm-bubble {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(50px);
+  z-index: 1;
 }
 
 /* Dynamic Breathing Biofeedback Keyframes */

@@ -87,19 +87,20 @@ export default function Mascot({
           style={{
             position: "absolute",
             bottom: `${size + 15}px`,
-            backgroundColor: "var(--bg-surface)",
-            color: "var(--text-primary)",
-            padding: "12px 16px",
-            borderRadius: "16px",
-            boxShadow: "var(--shadow-hover)",
-            border: "1.5px solid var(--border-light)",
+            backgroundColor: "rgba(18, 19, 38, 0.85)",
+            color: "#EAE8E3",
+            padding: "14px 18px",
+            borderRadius: "18px",
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(167, 139, 250, 0.1)",
+            border: "1.5px solid rgba(167, 139, 250, 0.3)",
             fontSize: "14px",
             fontWeight: "500",
-            maxWidth: "240px",
+            maxWidth: "250px",
             textAlign: "center",
             zIndex: 10,
             animation: "fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
             pointerEvents: "none",
+            backdropFilter: "blur(12px)",
           }}
         >
           {bubbleText}
@@ -112,9 +113,9 @@ export default function Mascot({
               transform: "translateX(-50%) rotate(45deg)",
               width: "14px",
               height: "14px",
-              backgroundColor: "var(--bg-surface)",
-              borderRight: "1.5px solid var(--border-light)",
-              borderBottom: "1.5px solid var(--border-light)",
+              backgroundColor: "rgba(18, 19, 38, 0.85)",
+              borderRight: "1.5px solid rgba(167, 139, 250, 0.3)",
+              borderBottom: "1.5px solid rgba(167, 139, 250, 0.3)",
             }}
           />
         </div>
