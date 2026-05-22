@@ -24,11 +24,11 @@ graph TD
     *   `/app/page.tsx`: Landing Page
     *   `/app/(auth)/login/page.tsx`: Login/Register Page
     *   `/app/(main)/dashboard/page.tsx`: Main Dashboard
-    *   `/app/(main)/chat/page.tsx`: Chatbot Page
-    *   `/app/(main)/journal/page.tsx`: Journaling Page
+    *   `/app/(main)/chatbot/page.tsx`: Chatbot Page
+    *   `/app/(main)/journaling/page.tsx`: Journaling Page
     *   `/app/(main)/history/page.tsx`: History & Summaries Page
     *   `/app/(main)/analysis/page.tsx`: Analysis Page
-    *   `/app/(main)/crisis/page.tsx`: Crisis SOS System
+    *   `/app/(main)/crisis-sos/page.tsx`: Crisis SOS System
     *   `/app/(main)/exercises/page.tsx`: Recommended Exercises Page
 *   **Key Responsibilities**:
     *   Rendering fluid, calming UI components based on the established color framework.
