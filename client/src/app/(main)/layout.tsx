@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../lib/api";
 
 export default function AuthenticatedLayout({
   children,
@@ -12,9 +13,14 @@ export default function AuthenticatedLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isLoading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Onboarding verification states
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(true);
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
   // Redirect unauthenticated users to login
   useEffect(() => {
@@ -31,8 +37,37 @@ export default function AuthenticatedLayout({
     }
   }, []);
 
-  // Show loading screen while checking auth
-  if (isLoading) {
+  // Check onboarding status on mount or user change
+  useEffect(() => {
+    if (!user) {
+      setCheckingOnboarding(false);
+      return;
+    }
+
+    async function checkOnboardingStatus() {
+      try {
+        const data = await api.get<{ mascot: any | null; persona: any | null }>("/api/mascot");
+        if (data.mascot && data.persona) {
+          setHasCompletedOnboarding(true);
+        } else {
+          setHasCompletedOnboarding(false);
+          // Redirect other routes to dashboard if onboarding is incomplete
+          if (pathname !== "/dashboard") {
+            router.push("/dashboard");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check layout onboarding status:", err);
+      } finally {
+        setCheckingOnboarding(false);
+      }
+    }
+
+    checkOnboardingStatus();
+  }, [user]);
+
+  // Show loading screen while checking auth and onboarding
+  if (isLoading || checkingOnboarding) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--background)" }}>
         <div style={{ textAlign: "center" }}>
@@ -45,6 +80,34 @@ export default function AuthenticatedLayout({
 
   // Don't render children at all until we know the user is authenticated
   if (!user) return null;
+
+  // Render a full-screen, sidebar-free, header-free canvas for onboarding unwrapping page
+  if (!hasCompletedOnboarding) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "var(--background)",
+          color: "var(--text-primary)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "24px",
+        }}
+      >
+        <main
+          style={{
+            maxWidth: "800px",
+            width: "100%",
+            margin: "0 auto",
+          }}
+        >
+          {children}
+        </main>
+      </div>
+    );
+  }
 
   const handleToggleCollapse = () => {
     setSidebarCollapsed((prev) => {

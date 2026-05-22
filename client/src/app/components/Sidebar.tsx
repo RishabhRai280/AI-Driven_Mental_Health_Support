@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -18,6 +19,7 @@ export default function Sidebar({
   onToggleCollapse,
 }: SidebarProps) {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const menuItems = [
     {
@@ -206,6 +208,50 @@ export default function Sidebar({
               </Link>
             );
           })}
+
+          {/* Log Out Option */}
+          <button
+            onClick={() => {
+              if (window.confirm("Are you sure you want to log out of SereneMind?")) {
+                logout();
+              }
+            }}
+            title={isCollapsed ? "Log Out" : undefined}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isCollapsed ? "center" : "flex-start",
+              gap: isCollapsed ? "0" : "12px",
+              padding: isCollapsed ? "12px" : "12px 16px",
+              borderRadius: "14px",
+              fontSize: "15px",
+              fontWeight: "500",
+              color: "var(--color-error)",
+              backgroundColor: "transparent",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "left",
+              transition: "all 0.2s ease",
+              width: "100%",
+            }}
+            className="sidebar-item logout-item"
+          >
+            <span
+              style={{
+                color: "var(--color-error)",
+                display: "flex",
+                alignItems: "center",
+                flexShrink: 0,
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </span>
+            {!isCollapsed && (
+              <span style={{ whiteSpace: "nowrap" }}>
+                Log Out
+              </span>
+            )}
+          </button>
         </nav>
 
         {/* Divider */}
@@ -302,6 +348,12 @@ export default function Sidebar({
         .sidebar-item:hover {
           color: var(--color-primary) !important;
           background-color: rgba(91, 127, 166, 0.05) !important;
+          transform: translateY(-1px);
+        }
+
+        .logout-item:hover {
+          color: var(--color-error) !important;
+          background-color: rgba(192, 118, 90, 0.08) !important;
           transform: translateY(-1px);
         }
 

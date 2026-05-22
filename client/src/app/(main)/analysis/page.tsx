@@ -20,9 +20,15 @@ export default function AnalysisPage() {
   useEffect(() => {
     async function fetchCalendar() {
       try {
-        const data = await api.get<{ days: CalendarDay[]; month: number; year: number }>("/api/calendar");
+        const data = await api.get<{
+          days: CalendarDay[];
+          month: number;
+          year: number;
+        }>("/api/calendar");
         const calMap: Record<number, CalendarDay> = {};
-        data.days.forEach((d) => { calMap[d.day] = d; });
+        data.days.forEach((d) => {
+          calMap[d.day] = d;
+        });
         setCalendar(calMap);
       } catch (err) {
         console.error("Failed to fetch mood calendar:", err);
@@ -49,7 +55,11 @@ export default function AnalysisPage() {
       });
       setCalendar((prev) => ({
         ...prev,
-        [selectedDay]: { day: selectedDay, mood: (dayMoodEdit as any) || null, note: dayNoteEdit },
+        [selectedDay]: {
+          day: selectedDay,
+          mood: (dayMoodEdit as any) || null,
+          note: dayNoteEdit,
+        },
       }));
       setSelectedDay(null);
       setDayMoodEdit("");
@@ -62,9 +72,13 @@ export default function AnalysisPage() {
 
   // Speech Recognition Speech-to-text dictation
   const toggleVoiceInput = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Voice input is not supported in this browser. Please try Google Chrome or Microsoft Edge.");
+      alert(
+        "Voice input is not supported in this browser. Please try Google Chrome or Microsoft Edge.",
+      );
       return;
     }
 
@@ -96,7 +110,9 @@ export default function AnalysisPage() {
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       if (transcript) {
-        setDayNoteEdit((prev) => prev + (prev ? " " : "") + transcript.trim() + ".");
+        setDayNoteEdit(
+          (prev) => prev + (prev ? " " : "") + transcript.trim() + ".",
+        );
       }
     };
 
@@ -121,23 +137,40 @@ export default function AnalysisPage() {
   // Recalculate mood ratios in real-time!
   const moodRatios = useMemo(() => {
     if (days.length === 0) return [];
-    
+
     const totals = { Calm: 0, Energetic: 0, Sad: 0, Anxious: 0, Stressed: 0 };
-    days.forEach(d => {
+    days.forEach((d) => {
       if (d.mood) totals[d.mood as keyof typeof totals] += 1;
     });
 
     const list = [
-      { label: "Calm", color: "var(--color-success)", desc: "Peaceful baseline" },
-      { label: "Energetic", color: "var(--color-secondary)", desc: "High motivation" },
+      {
+        label: "Calm",
+        color: "var(--color-success)",
+        desc: "Peaceful baseline",
+      },
+      {
+        label: "Energetic",
+        color: "var(--color-secondary)",
+        desc: "High motivation",
+      },
       { label: "Sad", color: "var(--color-primary)", desc: "Reflective space" },
-      { label: "Anxious", color: "var(--color-accent)", desc: "Hyperactive alert" },
-      { label: "Stressed", color: "var(--color-error)", desc: "Tight deadlines" },
+      {
+        label: "Anxious",
+        color: "var(--color-accent)",
+        desc: "Hyperactive alert",
+      },
+      {
+        label: "Stressed",
+        color: "var(--color-error)",
+        desc: "Tight deadlines",
+      },
     ];
 
-    return list.map(item => {
+    return list.map((item) => {
       const count = totals[item.label as keyof typeof totals] || 0;
-      const percent = days.length > 0 ? Math.round((count / days.length) * 100) : 0;
+      const percent =
+        days.length > 0 ? Math.round((count / days.length) * 100) : 0;
       return { ...item, percent };
     });
   }, [days]);
@@ -145,7 +178,9 @@ export default function AnalysisPage() {
   // Recalculate stable baseline index in real-time!
   const baselinePercentage = useMemo(() => {
     if (days.length === 0) return 0;
-    const stable = days.filter(d => d.mood === "Calm" || d.mood === "Energetic").length;
+    const stable = days.filter(
+      (d) => d.mood === "Calm" || d.mood === "Energetic",
+    ).length;
     return Math.round((stable / days.length) * 100);
   }, [days]);
 
@@ -185,8 +220,13 @@ export default function AnalysisPage() {
 
   const handleDownloadReport = () => {
     if (days.length === 0) return;
-    const fileContent = `SERENEMIND WELLNESS DIAGNOSTICS REPORT\nGenerated: ${new Date().toLocaleDateString()}\nBaseline Mindfulness Index: ${baselinePercentage}%\n\nTelemetry Logs:\n` 
-      + days.map(d => `Day ${d.day}: Mood [${d.mood || "None"}] - Notes: ${d.note}`).join("\n");
+    const fileContent =
+      `SERENEMIND WELLNESS DIAGNOSTICS REPORT\nGenerated: ${new Date().toLocaleDateString()}\nBaseline Mindfulness Index: ${baselinePercentage}%\n\nTelemetry Logs:\n` +
+      days
+        .map(
+          (d) => `Day ${d.day}: Mood [${d.mood || "None"}] - Notes: ${d.note}`,
+        )
+        .join("\n");
 
     const element = document.createElement("a");
     const file = new Blob([fileContent], { type: "text/plain" });
@@ -210,13 +250,27 @@ export default function AnalysisPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
         {/* Heatmap Section */}
         <section className="glass-card" style={{ padding: "28px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "20px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              marginBottom: "20px",
+            }}
+          >
             <div>
-              <h3 style={{ fontSize: "22px", fontFamily: "var(--font-header)", fontWeight: 500 }}>
+              <h3
+                style={{
+                  fontSize: "22px",
+                  fontFamily: "var(--font-header)",
+                  fontWeight: 500,
+                }}
+              >
                 Monthly Mood Heatmap
               </h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-                Hover to preview telemetry, and click on any block to modify diagnostic logs.
+                Hover to preview telemetry, and click on any block to modify
+                diagnostic logs.
               </p>
             </div>
             <button
@@ -278,11 +332,13 @@ export default function AnalysisPage() {
               const glowColor = getMoodGlow(mood);
               const isHovered = hoveredDay?.day === dayNum;
               const isSelected = selectedDay === dayNum;
-              
+
               return (
                 <div
                   key={dayNum}
-                  onMouseEnter={() => setHoveredDay(d ?? { day: dayNum, mood: null, note: "" })}
+                  onMouseEnter={() =>
+                    setHoveredDay(d ?? { day: dayNum, mood: null, note: "" })
+                  }
                   onMouseLeave={() => setHoveredDay(null)}
                   onClick={() => setSelectedDay(dayNum)}
                   style={{
@@ -296,18 +352,23 @@ export default function AnalysisPage() {
                     fontSize: "14px",
                     fontWeight: "600",
                     cursor: "pointer",
-                    transition: "all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                    transition:
+                      "all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
                     boxShadow: isSelected
                       ? `0 0 0 3px var(--color-primary), 0 8px 24px ${glowColor}`
-                      : isHovered 
-                      ? `0 8px 24px ${glowColor}, inset 0 0 0 2px rgba(255, 255, 255, 0.3)` 
-                      : "none",
-                    transform: isSelected 
-                      ? "scale(1.1) translateY(-3px)" 
-                      : isHovered ? "scale(1.15) translateY(-3px)" : "scale(1)",
-                    border: isSelected 
-                      ? "2px solid #FFFFFF" 
-                      : isHovered ? "2px solid #FFFFFF" : "2px solid transparent",
+                      : isHovered
+                        ? `0 8px 24px ${glowColor}, inset 0 0 0 2px rgba(255, 255, 255, 0.3)`
+                        : "none",
+                    transform: isSelected
+                      ? "scale(1.1) translateY(-3px)"
+                      : isHovered
+                        ? "scale(1.15) translateY(-3px)"
+                        : "scale(1)",
+                    border: isSelected
+                      ? "2px solid #FFFFFF"
+                      : isHovered
+                        ? "2px solid #FFFFFF"
+                        : "2px solid transparent",
                     zIndex: isSelected || isHovered ? 10 : 1,
                   }}
                   className="heatmap-day-block"
@@ -331,7 +392,10 @@ export default function AnalysisPage() {
             }}
           >
             {moodRatios.map((item) => (
-              <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                key={item.label}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <span
                   style={{
                     width: "14px",
@@ -341,7 +405,13 @@ export default function AnalysisPage() {
                     boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                   }}
                 />
-                <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600" }}>
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--text-secondary)",
+                    fontWeight: "600",
+                  }}
+                >
                   {item.label}
                 </span>
               </div>
@@ -351,7 +421,14 @@ export default function AnalysisPage() {
 
         {/* CSS-based Stacked Trend Chart Section */}
         <section className="glass-card" style={{ padding: "28px" }}>
-          <h3 style={{ fontSize: "20px", fontFamily: "var(--font-header)", marginBottom: "16px", fontWeight: 500 }}>
+          <h3
+            style={{
+              fontSize: "20px",
+              fontFamily: "var(--font-header)",
+              marginBottom: "16px",
+              fontWeight: 500,
+            }}
+          >
             Monthly Mood Distribution
           </h3>
 
@@ -383,12 +460,12 @@ export default function AnalysisPage() {
           </div>
 
           {/* Detailed distribution list */}
-          <div 
-            style={{ 
-              display: "grid", 
-              gridTemplateColumns: "repeat(5, 1fr)", 
-              gap: "12px" 
-            }} 
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5, 1fr)",
+              gap: "12px",
+            }}
             className="distribution-cols"
           >
             {moodRatios.map((item) => (
@@ -405,11 +482,32 @@ export default function AnalysisPage() {
                 }}
                 className="dist-card"
               >
-                <div style={{ fontSize: "22px", fontWeight: "700", color: item.color }}>{item.percent}%</div>
-                <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginTop: "4px" }}>
+                <div
+                  style={{
+                    fontSize: "22px",
+                    fontWeight: "700",
+                    color: item.color,
+                  }}
+                >
+                  {item.percent}%
+                </div>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color: "var(--text-primary)",
+                    marginTop: "4px",
+                  }}
+                >
                   {item.label}
                 </div>
-                <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--text-secondary)",
+                    marginTop: "2px",
+                  }}
+                >
                   {item.desc}
                 </div>
               </div>
@@ -421,7 +519,13 @@ export default function AnalysisPage() {
       {/* Right Column - Mascot correlations analyzer */}
       <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         <div>
-          <h3 style={{ fontSize: "22px", fontFamily: "var(--font-header)", fontWeight: 500 }}>
+          <h3
+            style={{
+              fontSize: "22px",
+              fontFamily: "var(--font-header)",
+              fontWeight: 500,
+            }}
+          >
             Coping Diagnostics
           </h3>
           <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>
@@ -438,7 +542,8 @@ export default function AnalysisPage() {
             padding: "32px 24px",
             textAlign: "center",
             gap: "24px",
-            background: "linear-gradient(145deg, var(--bg-surface) 0%, rgba(169, 146, 196, 0.02) 100%)",
+            background:
+              "linear-gradient(145deg, var(--bg-surface) 0%, rgba(169, 146, 196, 0.02) 100%)",
             border: "1px solid var(--border-light)",
             minHeight: "500px",
             justifyContent: "space-between",
@@ -446,22 +551,60 @@ export default function AnalysisPage() {
         >
           {selectedDay ? (
             /* Interactive Day Editor form */
-            <form onSubmit={handleUpdateDay} style={{ width: "100%", textAlign: "left", display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h4 style={{ fontSize: "16px", fontWeight: "600", color: "var(--color-primary)" }}>
+            <form
+              onSubmit={handleUpdateDay}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <h4
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    color: "var(--color-primary)",
+                  }}
+                >
                   Edit Day {selectedDay} Telemetry
                 </h4>
                 <button
                   type="button"
                   onClick={() => setSelectedDay(null)}
-                  style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontWeight: "600", fontSize: "13px" }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--text-secondary)",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    fontSize: "13px",
+                  }}
                 >
                   Cancel
                 </button>
               </div>
 
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Select Day Mood</label>
+                <label
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    color: "var(--text-secondary)",
+                    display: "block",
+                    marginBottom: "6px",
+                  }}
+                >
+                  Select Day Mood
+                </label>
                 <select
                   value={dayMoodEdit ?? ""}
                   onChange={(e) => setDayMoodEdit(e.target.value as any)}
@@ -485,8 +628,22 @@ export default function AnalysisPage() {
 
               {/* Notes input with inline Speech Dictation */}
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)", margin: 0 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "6px",
+                  }}
+                >
+                  <label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      color: "var(--text-secondary)",
+                      margin: 0,
+                    }}
+                  >
                     Daily Diagnostic Notes
                   </label>
                   <button
@@ -495,17 +652,34 @@ export default function AnalysisPage() {
                     style={{
                       background: "none",
                       border: "none",
-                      color: isListening ? "var(--color-error)" : "var(--color-primary)",
+                      color: isListening
+                        ? "var(--color-error)"
+                        : "var(--color-primary)",
                       fontSize: "12px",
                       fontWeight: "600",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
                       gap: "4px",
-                      animation: isListening ? "pulse-mic 1.5s infinite" : "none",
+                      animation: isListening
+                        ? "pulse-mic 1.5s infinite"
+                        : "none",
                     }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={isListening ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill={isListening ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                      <line x1="12" y1="19" x2="12" y2="23" />
+                      <line x1="8" y1="23" x2="16" y2="23" />
+                    </svg>
                     {isListening ? "Listening (Stop)" : "Dictate"}
                   </button>
                 </div>
@@ -515,14 +689,25 @@ export default function AnalysisPage() {
                   disabled={isListening}
                   rows={4}
                   required
-                  style={{ fontSize: "14px", transition: "all 0.3s ease", border: isListening ? "1.5px solid var(--color-error)" : "1.5px solid var(--border-input)" }}
+                  style={{
+                    fontSize: "14px",
+                    transition: "all 0.3s ease",
+                    border: isListening
+                      ? "1.5px solid var(--color-error)"
+                      : "1.5px solid var(--border-input)",
+                  }}
                 />
               </div>
 
               <button
                 type="submit"
                 className="btn-primary"
-                style={{ width: "100%", height: "46px", fontSize: "14px", marginTop: "10px" }}
+                style={{
+                  width: "100%",
+                  height: "46px",
+                  fontSize: "14px",
+                  marginTop: "10px",
+                }}
               >
                 Save Day Logs
               </button>
@@ -531,45 +716,54 @@ export default function AnalysisPage() {
             /* Default Diagnostics HUD block */
             <>
               <Mascot
-                pose={hoveredDay ? "examining-closely" : "holding-magnifying-glass"}
-                size={180}
-                dialogue={
-                  hoveredDay
-                    ? `Day ${hoveredDay.day} telemetry processed!`
-                    : "Hover over heatmap blocks, or click one to edit logs!"
+                pose={
+                  hoveredDay ? "examining-closely" : "holding-magnifying-glass"
                 }
+                size={180}
                 interactive={false}
               />
 
               {hoveredDay ? (
-                <div style={{ textAlign: "left", width: "100%", marginTop: "10px" }}>
-                  <div 
-                    style={{ 
-                      display: "flex", 
-                      justifyContent: "space-between", 
+                <div
+                  style={{
+                    textAlign: "left",
+                    width: "100%",
+                    marginTop: "10px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
                       alignItems: "center",
                       marginBottom: "12px",
                     }}
                   >
-                    <h4 style={{ fontSize: "15px", fontWeight: "600", color: getMoodColor(hoveredDay.mood) }}>
+                    <h4
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "600",
+                        color: getMoodColor(hoveredDay.mood),
+                      }}
+                    >
                       Day {hoveredDay.day} Wellness Summary
                     </h4>
-                    <span 
-                      style={{ 
-                        fontSize: "11px", 
-                        fontWeight: "700", 
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "700",
                         textTransform: "uppercase",
-                        backgroundColor: "var(--bg-nav)", 
-                        padding: "4px 8px", 
+                        backgroundColor: "var(--bg-nav)",
+                        padding: "4px 8px",
                         borderRadius: "8px",
                         color: "var(--text-secondary)",
-                        border: "1px solid var(--border-light)"
+                        border: "1px solid var(--border-light)",
                       }}
                     >
                       May 2026
                     </span>
                   </div>
-                  
+
                   <div
                     style={{
                       padding: "16px",
@@ -578,60 +772,121 @@ export default function AnalysisPage() {
                       border: "1px solid var(--border-light)",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                      <span 
-                        style={{ 
-                          width: "8px", 
-                          height: "8px", 
-                          borderRadius: "50%", 
-                          backgroundColor: getMoodColor(hoveredDay.mood) 
-                        }} 
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          backgroundColor: getMoodColor(hoveredDay.mood),
+                        }}
                       />
-                      <div style={{ fontWeight: "700", fontSize: "13px", color: "var(--text-primary)" }}>
+                      <div
+                        style={{
+                          fontWeight: "700",
+                          fontSize: "13px",
+                          color: "var(--text-primary)",
+                        }}
+                      >
                         Mood State: {hoveredDay.mood}
                       </div>
                     </div>
-                    <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.6" }}>
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color: "var(--text-secondary)",
+                        lineHeight: "1.6",
+                      }}
+                    >
                       {hoveredDay.note}
                     </p>
                   </div>
                 </div>
               ) : (
-                <div style={{ textAlign: "left", width: "100%", marginTop: "10px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                    <h4 style={{ fontSize: "15px", fontWeight: "600", color: "var(--color-primary)" }}>
+                <div
+                  style={{
+                    textAlign: "left",
+                    width: "100%",
+                    marginTop: "10px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    <h4
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "600",
+                        color: "var(--color-primary)",
+                      }}
+                    >
                       Sparky&apos;s Trend Insights
                     </h4>
-                    <span 
+                    <span
                       style={{
                         fontSize: "11px",
                         backgroundColor: "rgba(90, 148, 117, 0.12)",
                         color: "var(--color-success)",
                         padding: "4px 10px",
                         borderRadius: "10px",
-                        fontWeight: "bold"
+                        fontWeight: "bold",
                       }}
                     >
                       Baseline: {baselinePercentage}% Stable
                     </span>
                   </div>
-                  
-                  <div 
-                    style={{ 
-                      padding: "18px", 
-                      backgroundColor: "var(--bg-nav)", 
-                      borderRadius: "16px", 
+
+                  <div
+                    style={{
+                      padding: "18px",
+                      backgroundColor: "var(--bg-nav)",
+                      borderRadius: "16px",
                       border: "1px solid var(--border-light)",
                       display: "flex",
                       flexDirection: "column",
                       gap: "10px",
                     }}
                   >
-                    <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.6" }}>
-                      Sparky notices your coping indexes. Practicing deep pacing breathing exercises and reflecting inside journal nodes directly improves your nervous stability percentage baseline.
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color: "var(--text-secondary)",
+                        lineHeight: "1.6",
+                      }}
+                    >
+                      Sparky notices your coping indexes. Practicing deep pacing
+                      breathing exercises and reflecting inside journal nodes
+                      directly improves your nervous stability percentage
+                      baseline.
                     </p>
-                    <div style={{ height: "1px", backgroundColor: "var(--border-light)" }} />
-                    <div style={{ fontSize: "12px", color: "var(--text-primary)", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div
+                      style={{
+                        height: "1px",
+                        backgroundColor: "var(--border-light)",
+                      }}
+                    />
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--text-primary)",
+                        fontWeight: "600",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
                       <span>💡</span> Suggested practice: 4-7-8 Breathing
                     </div>
                   </div>
@@ -662,9 +917,16 @@ export default function AnalysisPage() {
         }
 
         @keyframes pulse-mic {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.15); opacity: 0.8; }
-          100% { transform: scale(1); }
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.15);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(1);
+          }
         }
 
         @media (max-width: 900px) {

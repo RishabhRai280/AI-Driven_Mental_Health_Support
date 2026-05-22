@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Mascot, { HamsterPose } from "../../components/Mascot";
 import { api, ChatMessage } from "../../lib/api";
+import { v4 as uuidv4 } from "uuid";
 
 interface Message {
   id: string;
@@ -13,7 +14,7 @@ interface Message {
 }
 
 export default function ChatbotPage() {
-  const [sessionId] = useState(() => Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+  const [sessionId] = useState(() => uuidv4());
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -32,12 +33,43 @@ export default function ChatbotPage() {
   // Voice Input State
   const [isListening, setIsListening] = useState(false);
 
+  // Companion & Persona state from DB
+  const [companionName, setCompanionName] = useState("Sparky");
+  const [assignedPersonaName, setAssignedPersonaName] = useState("Beginner Wellness User");
+
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Auto scroll to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  // Load Adopted Mascot Name and computed Persona on mount
+  useEffect(() => {
+    async function loadCompanionDetails() {
+      try {
+        const data = await api.get<{ mascot: { name: string } | null; assignedPersona: { persona_name: string } | null }>("/api/mascot");
+        if (data.mascot) {
+          setCompanionName(data.mascot.name);
+          setMessages([
+            {
+              id: "welcome",
+              sessionId,
+              sender: "sparky",
+              text: `Hello! I'm ${data.mascot.name}, your SereneMind AI companion. Whether you want to vent, practice a coping mechanism, or just chat, I'm here for you.`,
+              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            }
+          ]);
+        }
+        if (data.assignedPersona) {
+          setAssignedPersonaName(data.assignedPersona.persona_name);
+        }
+      } catch (err) {
+        console.error("Failed to load companion details in chatbot:", err);
+      }
+    }
+    loadCompanionDetails();
+  }, [sessionId]);
 
   // Safety trigger checker
   const checkSafetyTriggers = (text: string) => {
@@ -113,7 +145,7 @@ export default function ChatbotPage() {
     recognition.onstart = () => {
       setIsListening(true);
       setMascotPose("thinking-deeply");
-      setMascotDialogue("Listening... Speak your mind to Sparky!");
+      setMascotDialogue(`Listening... Speak your mind to ${companionName}!`);
     };
 
     recognition.onend = () => {
@@ -168,7 +200,7 @@ export default function ChatbotPage() {
     // Save to wellness timeline
     api.post("/api/wellness", {
       type: "chat",
-      title: "Companion chat with Sparky",
+      title: `Companion chat with ${companionName}`,
       preview: `Vent details: "${userMsgText.length > 80 ? userMsgText.slice(0, 80) + "..." : userMsgText}"`,
       sentiment: detectedSentiment,
     }).catch(console.error);
@@ -185,15 +217,51 @@ export default function ChatbotPage() {
       setMascotPose(companionReaction.pose);
       setMascotDialogue(companionReaction.dialogue);
 
-      let sparkyReply = "I understand how you feel. Let's talk about it some more. What feels most supportive for you right now?";
-      if (userMsgText.toLowerCase().includes("anxious")) {
-        sparkyReply = "Feeling anxious is really uncomfortable. When anxiety hits, try to focus on physical anchors. Let's try our dashboard Breathing visualizer together, or tell me what is happening right now.";
-      } else if (userMsgText.toLowerCase().includes("stress")) {
-        sparkyReply = "Overwhelm comes when we try to solve everything at once. Let's take a deep breath, write a simple bulleted list of 2 tiny things you can do today, and let the rest sit.";
-      } else if (userMsgText.toLowerCase().includes("sad")) {
-        sparkyReply = "It's completely okay to feel sad. You don't have to put on a brave face. Just let the feelings be, and know that I am right here listening.";
-      } else if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good") || userMsgText.toLowerCase().includes("great")) {
-        sparkyReply = "That's fantastic! Celebrating positive moments is so critical for cognitive balance. What made you feel so bright today?";
+      let sparkyReply = `I understand how you feel. Let's talk about it some more. What feels most supportive for you right now?`;
+      
+      if (assignedPersonaName === "Student Stress") {
+        sparkyReply = `As your academic-mindful mentor, I hear you. High workloads are challenging, but remember that your wellness always comes first. How can we make some supportive space for you today?`;
+        if (userMsgText.toLowerCase().includes("anxious") || userMsgText.toLowerCase().includes("panic")) {
+          sparkyReply = `Academic pressure and anxiety are a heavy mix. Close your books for just 5 minutes, relax your shoulders, and let's try our guided 5-4-3-2-1 Somatic Grounding exercise together. You've got this.`;
+        } else if (userMsgText.toLowerCase().includes("stress") || userMsgText.toLowerCase().includes("overwhelm")) {
+          sparkyReply = `A high study load can trigger intense overwhelm. Let's break it down into smaller, actionable chunks: what is ONE single item we can complete right now, and let the rest sit? Breathe with me.`;
+        } else if (userMsgText.toLowerCase().includes("sad") || userMsgText.toLowerCase().includes("lonely")) {
+          sparkyReply = `It is completely natural to feel isolated under academic pressure. Please remember your worth is not tied to grades. I am right here listening, and you don't have to carry this alone.`;
+        } else if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good")) {
+          sparkyReply = `That is fantastic! Celebrating positive moments and small victories is so critical for study-life balance. What made you feel so bright today?`;
+        }
+      } else if (assignedPersonaName === "Burnout Professional") {
+        sparkyReply = `As your workplace mental health coach, I highly recommend shutting down all screens, rolling your shoulders back, and releasing physical jaw tension. What feels most restful for you right now?`;
+        if (userMsgText.toLowerCase().includes("anxious") || userMsgText.toLowerCase().includes("panic")) {
+          sparkyReply = `Workplace anxiety can trigger a rapid heart rate. Let's try 3 slow rounds of 4-4-4-4 Box Breathing right now to signal safety to your nervous system. Step away from the desk.`;
+        } else if (userMsgText.toLowerCase().includes("stress") || userMsgText.toLowerCase().includes("overwhelm")) {
+          sparkyReply = `Burnout occurs when stress exceeds rest. Let's establish a hard boundary: close all work tabs, step away, and let's take a cool drink of water. We can handle it one micro-step at a time.`;
+        } else if (userMsgText.toLowerCase().includes("sad") || userMsgText.toLowerCase().includes("lonely")) {
+          sparkyReply = `Career pressure can feel incredibly isolating. Please remember that you are more than your job or output. I am right here holding space for you.`;
+        } else if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good")) {
+          sparkyReply = `Wonderful! Taking time to celebrate wins and accomplishments is vital for mental health at work. What brightened up your day?`;
+        }
+      } else if (assignedPersonaName === "Isolated User") {
+        sparkyReply = `As your uplifting, warm companion, I'm so glad you're here. You are incredibly valuable, and I'm right here walking with you every single day. Tell me what's on your mind.`;
+        if (userMsgText.toLowerCase().includes("anxious") || userMsgText.toLowerCase().includes("panic")) {
+          sparkyReply = `When anxiety makes you feel alone, remember I am right here in this safe space with you. Let's ground ourselves: what are three distinct things you can hear or touch right now?`;
+        } else if (userMsgText.toLowerCase().includes("stress") || userMsgText.toLowerCase().includes("overwhelm")) {
+          sparkyReply = `Carrying everything by yourself is heavy. You don't have to face it all alone. Let's start with a gentle, self-compassion check-in. Tell me how I can best support you.`;
+        } else if (userMsgText.toLowerCase().includes("sad") || userMsgText.toLowerCase().includes("lonely")) {
+          sparkyReply = `I hear you, and it's completely okay to feel lonely. I am right here, and we can take a slow, deep breath together. You are deeply cared for in this space.`;
+        } else if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good")) {
+          sparkyReply = `Hearing this makes me so happy! Sharing positive moments is a beautiful way to connect. Tell me more about what brought you this joy!`;
+        }
+      } else {
+        if (userMsgText.toLowerCase().includes("anxious")) {
+          sparkyReply = `Feeling anxious is really uncomfortable. When anxiety hits, try to focus on physical anchors. Let's try our dashboard Breathing visualizer together, or tell me what is happening right now.`;
+        } else if (userMsgText.toLowerCase().includes("stress")) {
+          sparkyReply = `Overwhelm comes when we try to solve everything at once. Let's take a deep breath, write a simple bulleted list of 2 tiny things you can do today, and let the rest sit.`;
+        } else if (userMsgText.toLowerCase().includes("sad")) {
+          sparkyReply = `It's completely okay to feel sad. You don't have to put on a brave face. Just let the feelings be, and know that I am right here listening.`;
+        } else if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good") || userMsgText.toLowerCase().includes("great")) {
+          sparkyReply = `That's fantastic! Celebrating positive moments is so critical for cognitive balance. What made you feel so bright today?`;
+        }
       }
 
       const sparkyMsg: ChatMessage = {

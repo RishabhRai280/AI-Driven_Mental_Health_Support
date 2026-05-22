@@ -64,12 +64,7 @@ export default function CrisisSOSPage() {
         </h1>
 
         {/* Empathy hamster holding heart */}
-        <Mascot
-          pose="holding-heart"
-          size={180}
-          dialogue="I'm holding this warm heart right beside you. Let's get through this minute together."
-          interactive={false}
-        />
+        <Mascot pose="holding-heart" size={180} interactive={false} />
 
         {/* Calm reassuring disclaimer */}
         <p
@@ -81,7 +76,9 @@ export default function CrisisSOSPage() {
             maxWidth: "540px",
           }}
         >
-          Distress can feel overwhelming, but feelings always change. You do not have to carry this alone. Please access these completely free, confidential resources right now.
+          Distress can feel overwhelming, but feelings always change. You do not
+          have to carry this alone. Please access these completely free,
+          confidential resources right now.
         </p>
 
         {/* Action Callout Box */}
@@ -107,9 +104,24 @@ export default function CrisisSOSPage() {
               backgroundColor: "rgba(192, 118, 90, 0.03)",
             }}
           >
-            <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--color-error)" }}>988 Suicide & Crisis</h3>
-            <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.4" }}>
-              Call or text 988 to connect immediately with sympathetic counselors. Free and private 24/7 support.
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "var(--color-error)",
+              }}
+            >
+              988 Suicide & Crisis
+            </h3>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "var(--text-secondary)",
+                lineHeight: "1.4",
+              }}
+            >
+              Call or text 988 to connect immediately with sympathetic
+              counselors. Free and private 24/7 support.
             </p>
             <a
               href="tel:988"
@@ -138,9 +150,24 @@ export default function CrisisSOSPage() {
               backgroundColor: "rgba(91, 127, 166, 0.03)",
             }}
           >
-            <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--color-primary)" }}>Crisis Text Line</h3>
-            <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.4" }}>
-              Text HOME to 741741 to chat silently with a dedicated crisis responder in absolute privacy.
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "var(--color-primary)",
+              }}
+            >
+              Crisis Text Line
+            </h3>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "var(--text-secondary)",
+                lineHeight: "1.4",
+              }}
+            >
+              Text HOME to 741741 to chat silently with a dedicated crisis
+              responder in absolute privacy.
             </p>
             <a
               href="sms:741741?&body=HOME"
@@ -160,7 +187,15 @@ export default function CrisisSOSPage() {
 
         {/* Personal Contacts list */}
         <div className="glass-card" style={{ width: "100%", padding: "24px" }}>
-          <h3 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "16px" }}>👥 Personal Support Circle</h3>
+          <h3
+            style={{
+              fontSize: "16px",
+              fontWeight: "600",
+              marginBottom: "16px",
+            }}
+          >
+            👥 Personal Support Circle
+          </h3>
           <div
             style={{
               display: "flex",
@@ -168,37 +203,101 @@ export default function CrisisSOSPage() {
               gap: "12px",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-light)", paddingBottom: "8px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderBottom: "1px solid var(--border-light)",
+                paddingBottom: "8px",
+              }}
+            >
               <div>
-                <div style={{ fontWeight: "600", fontSize: "14px" }}>Dr. Emily Watson (Therapist)</div>
-                <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Direct counseling line</div>
+                <div style={{ fontWeight: "600", fontSize: "14px" }}>
+                  Dr. Emily Watson (Therapist)
+                </div>
+                <div
+                  style={{ fontSize: "12px", color: "var(--text-secondary)" }}
+                >
+                  Direct counseling line
+                </div>
               </div>
-              <a href="tel:5550199" style={{ color: "var(--color-success)", fontWeight: "600", fontSize: "14px" }}>Call Doctor</a>
+              <a
+                href="tel:5550199"
+                style={{
+                  color: "var(--color-success)",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                }}
+              >
+                Call Doctor
+              </a>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-light)", paddingBottom: "8px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderBottom: "1px solid var(--border-light)",
+                paddingBottom: "8px",
+              }}
+            >
               <div>
-                <div style={{ fontWeight: "600", fontSize: "14px" }}>Mom (Personal Trust Contact)</div>
-                <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Family urgent care</div>
+                <div style={{ fontWeight: "600", fontSize: "14px" }}>
+                  Mom (Personal Trust Contact)
+                </div>
+                <div
+                  style={{ fontSize: "12px", color: "var(--text-secondary)" }}
+                >
+                  Family urgent care
+                </div>
               </div>
-              <a href="tel:5550188" style={{ color: "var(--color-success)", fontWeight: "600", fontSize: "14px" }}>Call Mom</a>
+              <a
+                href="tel:5550188"
+                style={{
+                  color: "var(--color-success)",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                }}
+              >
+                Call Mom
+              </a>
             </div>
           </div>
         </div>
 
         {/* Breathing Practice & Exit action links */}
-        <div style={{ display: "flex", gap: "16px", width: "100%", marginTop: "12px" }} className="sos-action-buttons">
+        <div
+          style={{
+            display: "flex",
+            gap: "16px",
+            width: "100%",
+            marginTop: "12px",
+          }}
+          className="sos-action-buttons"
+        >
           <Link
             href="/exercises"
             className="btn-secondary"
-            style={{ flex: 1, borderColor: "var(--color-secondary)", color: "var(--color-secondary)", height: "48px" }}
+            style={{
+              flex: 1,
+              borderColor: "var(--color-secondary)",
+              color: "var(--color-secondary)",
+              height: "48px",
+            }}
           >
             🧘 Slow Breathing Pacer
           </Link>
           <Link
             href="/dashboard"
             className="btn-primary"
-            style={{ flex: 1, backgroundColor: "var(--text-primary)", color: "var(--background)", height: "48px" }}
+            style={{
+              flex: 1,
+              backgroundColor: "var(--text-primary)",
+              color: "var(--background)",
+              height: "48px",
+            }}
           >
             Exit Safety Screen
           </Link>

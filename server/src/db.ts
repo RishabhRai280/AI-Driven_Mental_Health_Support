@@ -33,10 +33,74 @@ export async function testConnection(): Promise<void> {
   try {
     const client = await pool.connect();
     await client.query("SELECT NOW()");
+    
+    // Check if old user_personas table contains the 'age' column (unified schema)
+    const checkOldPersonaTable = await client.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'user_personas' AND column_name = 'age'
+    `);
+    
+    if (checkOldPersonaTable.rows.length > 0) {
+      console.log("⚠️ Found old user_personas table. Migrating to separate user_profiles and user_personas schema...");
+      await client.query("DROP TABLE IF EXISTS user_personas CASCADE");
+    }
+
+    // Create separate user_profiles table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_profiles (
+        id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        preferred_name  VARCHAR(100) NOT NULL DEFAULT '',
+        age             INTEGER,
+        occupation      VARCHAR(200),
+        sleep_hours     VARCHAR(50) NOT NULL DEFAULT '7-8 hours',
+        stress_level    INTEGER NOT NULL DEFAULT 5 CHECK (stress_level BETWEEN 1 AND 10),
+        self_care_scale INTEGER NOT NULL DEFAULT 5 CHECK (self_care_scale BETWEEN 1 AND 10),
+        mental_goal     VARCHAR(200) NOT NULL DEFAULT 'Achieve Calmer Baselines',
+        triggers        JSONB NOT NULL DEFAULT '[]',
+        water_intake    VARCHAR(50) NOT NULL DEFAULT '1-2 Liters',
+        screen_time     VARCHAR(50) NOT NULL DEFAULT '5-8 Hours',
+        social_context  VARCHAR(50) NOT NULL DEFAULT 'Neutral Connection',
+        physical_activity VARCHAR(100) NOT NULL DEFAULT 'Light Walking / Yoga',
+        created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (user_id)
+      )
+    `);
+
+    // Create separate user_personas table (representing matched behavioral cohorts)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_personas (
+        id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id            UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        persona_name       VARCHAR(100) NOT NULL DEFAULT 'Beginner Wellness User',
+        assigned_by        VARCHAR(50) NOT NULL DEFAULT 'system_evaluation',
+        description        TEXT NOT NULL DEFAULT '',
+        ai_behavior_prompt TEXT NOT NULL DEFAULT '',
+        created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (user_id)
+      )
+    `);
+
+    // Attach updated_at triggers
+    await client.query(`
+      DROP TRIGGER IF EXISTS update_user_profiles_updated_at ON user_profiles;
+      CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON user_profiles
+        FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+    `);
+
+    await client.query(`
+      DROP TRIGGER IF EXISTS update_user_personas_updated_at ON user_personas;
+      CREATE TRIGGER update_user_personas_updated_at BEFORE UPDATE ON user_personas
+        FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+    `);
+
     client.release();
-    console.log("✅ PostgreSQL connected successfully");
+    console.log("✅ PostgreSQL connected successfully & profiles/personas schemas verified.");
   } catch (err) {
-    console.warn("⚠️  PostgreSQL connection failed, falling back to development mode");
+    console.warn("⚠️  PostgreSQL connection failed, falling back to development mode:", err);
     console.warn("   Run: docker-compose up -d");
     console.log("   Then: npm run dev");
     isDevelopmentMode = true;

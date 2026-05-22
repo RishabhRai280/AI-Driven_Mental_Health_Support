@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS mascots (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  name         VARCHAR(100) NOT NULL DEFAULT 'Sparky',
+  name         VARCHAR(100) NOT NULL DEFAULT '',
   egg_type     VARCHAR(100) NOT NULL DEFAULT 'Moss Sage Egg',
   personality  VARCHAR(100) NOT NULL DEFAULT 'Calming & Stoic',
   level        INTEGER NOT NULL DEFAULT 1,
@@ -34,20 +34,40 @@ CREATE TABLE IF NOT EXISTS mascots (
 );
 
 -- ============================================================
--- USER PERSONAS — clinical diagnostic profile
+-- USER PROFILES — raw demographic & lifestyle metrics
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_profiles (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  preferred_name  VARCHAR(100) NOT NULL DEFAULT '',
+  age             INTEGER,
+  occupation      VARCHAR(200),
+  sleep_hours     VARCHAR(50) NOT NULL DEFAULT '7-8 hours',
+  stress_level    INTEGER NOT NULL DEFAULT 5 CHECK (stress_level BETWEEN 1 AND 10),
+  self_care_scale INTEGER NOT NULL DEFAULT 5 CHECK (self_care_scale BETWEEN 1 AND 10),
+  mental_goal     VARCHAR(200) NOT NULL DEFAULT 'Achieve Calmer Baselines',
+  triggers        JSONB NOT NULL DEFAULT '[]',
+  water_intake    VARCHAR(50) NOT NULL DEFAULT '1-2 Liters',
+  screen_time     VARCHAR(50) NOT NULL DEFAULT '5-8 Hours',
+  social_context  VARCHAR(50) NOT NULL DEFAULT 'Neutral Connection',
+  physical_activity VARCHAR(100) NOT NULL DEFAULT 'Light Walking / Yoga',
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id)
+);
+
+-- ============================================================
+-- USER PERSONAS — clinical diagnostic cohorts (matched groups)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS user_personas (
-  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  age            INTEGER,
-  occupation     VARCHAR(200),
-  sleep_hours    VARCHAR(50) NOT NULL DEFAULT '7-8 hours',
-  stress_level   INTEGER NOT NULL DEFAULT 5 CHECK (stress_level BETWEEN 1 AND 10),
-  self_care_scale INTEGER NOT NULL DEFAULT 5 CHECK (self_care_scale BETWEEN 1 AND 10),
-  mental_goal    VARCHAR(200) NOT NULL DEFAULT 'Achieve Calmer Baselines',
-  triggers       JSONB NOT NULL DEFAULT '[]',
-  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id            UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  persona_name       VARCHAR(100) NOT NULL DEFAULT 'Beginner Wellness User',
+  assigned_by        VARCHAR(50) NOT NULL DEFAULT 'system_evaluation',
+  description        TEXT NOT NULL DEFAULT '',
+  ai_behavior_prompt TEXT NOT NULL DEFAULT '',
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id)
 );
 
@@ -83,7 +103,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   session_id UUID NOT NULL,
-  sender     VARCHAR(20) NOT NULL CHECK (sender IN ('user', 'sparky')),
+  sender     VARCHAR(20) NOT NULL CHECK (sender IN ('user', 'companion')),
   text       TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -151,6 +171,9 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 CREATE TRIGGER update_mascots_updated_at BEFORE UPDATE ON mascots
+  FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON user_profiles
   FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 CREATE TRIGGER update_personas_updated_at BEFORE UPDATE ON user_personas

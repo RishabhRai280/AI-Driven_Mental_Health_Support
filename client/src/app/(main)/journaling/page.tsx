@@ -7,11 +7,13 @@ import { api } from "../../lib/api";
 export default function JournalingPage() {
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
-  const [sentiment, setSentiment] = useState<"Neutral" | "Positive" | "Anxious" | "Stressed">("Neutral");
+  const [sentiment, setSentiment] = useState<
+    "Neutral" | "Positive" | "Anxious" | "Stressed"
+  >("Neutral");
   const [mascotPose, setMascotPose] = useState<HamsterPose>("thinking-deeply");
   const [saveStatus, setSaveStatus] = useState("Draft");
   const currentJournalId = useRef<string | null>(null);
-  
+
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false);
 
@@ -29,15 +31,36 @@ export default function JournalingPage() {
 
     const timer = setTimeout(async () => {
       const lower = content.toLowerCase();
-      let detectedSentiment: "Neutral" | "Positive" | "Anxious" | "Stressed" = "Neutral";
+      let detectedSentiment: "Neutral" | "Positive" | "Anxious" | "Stressed" =
+        "Neutral";
 
-      if (lower.includes("happy") || lower.includes("glad") || lower.includes("joy") || lower.includes("peace") || lower.includes("gratitude") || lower.includes("great") || lower.includes("refreshed")) {
+      if (
+        lower.includes("happy") ||
+        lower.includes("glad") ||
+        lower.includes("joy") ||
+        lower.includes("peace") ||
+        lower.includes("gratitude") ||
+        lower.includes("great") ||
+        lower.includes("refreshed")
+      ) {
         detectedSentiment = "Positive";
         setMascotPose("celebrating-success");
-      } else if (lower.includes("anxious") || lower.includes("scared") || lower.includes("panic") || lower.includes("worry") || lower.includes("fear")) {
+      } else if (
+        lower.includes("anxious") ||
+        lower.includes("scared") ||
+        lower.includes("panic") ||
+        lower.includes("worry") ||
+        lower.includes("fear")
+      ) {
         detectedSentiment = "Anxious";
         setMascotPose("escaping-energy");
-      } else if (lower.includes("stress") || lower.includes("angry") || lower.includes("tired") || lower.includes("heavy") || lower.includes("overwhelm")) {
+      } else if (
+        lower.includes("stress") ||
+        lower.includes("angry") ||
+        lower.includes("tired") ||
+        lower.includes("heavy") ||
+        lower.includes("overwhelm")
+      ) {
         detectedSentiment = "Stressed";
         setMascotPose("balancing-nut");
       } else {
@@ -55,11 +78,14 @@ export default function JournalingPage() {
             sentiment: detectedSentiment,
           });
         } else {
-          const res = await api.post<{ journal: { id: string } }>("/api/journals", {
-            title: title || "Untitled Reflection",
-            body: content,
-            sentiment: detectedSentiment,
-          });
+          const res = await api.post<{ journal: { id: string } }>(
+            "/api/journals",
+            {
+              title: title || "Untitled Reflection",
+              body: content,
+              sentiment: detectedSentiment,
+            },
+          );
           currentJournalId.current = res.journal.id;
         }
         setSaveStatus("Autosaved successfully");
@@ -73,9 +99,13 @@ export default function JournalingPage() {
 
   // Speech Recognition Speech-to-text Dictator
   const toggleVoiceInput = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Voice input is not supported in this browser. Please try Google Chrome or Microsoft Edge.");
+      alert(
+        "Voice input is not supported in this browser. Please try Google Chrome or Microsoft Edge.",
+      );
       return;
     }
 
@@ -109,7 +139,9 @@ export default function JournalingPage() {
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       if (transcript) {
-        setContent((prev) => prev + (prev ? " " : "") + transcript.trim() + ".");
+        setContent(
+          (prev) => prev + (prev ? " " : "") + transcript.trim() + ".",
+        );
       }
     };
 
@@ -135,11 +167,14 @@ export default function JournalingPage() {
         });
       } else {
         // Create new journal
-        const res = await api.post<{ journal: { id: string } }>("/api/journals", {
-          title: title.trim() || "Untitled Reflection",
-          body: content.trim() || "No reflection thoughts logged.",
-          sentiment,
-        });
+        const res = await api.post<{ journal: { id: string } }>(
+          "/api/journals",
+          {
+            title: title.trim() || "Untitled Reflection",
+            body: content.trim() || "No reflection thoughts logged.",
+            sentiment,
+          },
+        );
         currentJournalId.current = res.journal.id;
       }
 
@@ -147,15 +182,18 @@ export default function JournalingPage() {
       await api.post("/api/wellness", {
         type: "journal",
         title: title.trim() || "Untitled Reflection",
-        preview: content.trim().slice(0, 180) || "No reflection thoughts logged.",
+        preview:
+          content.trim().slice(0, 180) || "No reflection thoughts logged.",
         sentiment,
         refId: currentJournalId.current,
       });
 
       setSaveStatus("Saved to historical logs!");
       setMascotPose("sleeping-content");
-      alert(`"${title.trim() || "Untitled Reflection"}" has been saved successfully to your Wellness Timeline!`);
-      
+      alert(
+        `"${title.trim() || "Untitled Reflection"}" has been saved successfully to your Wellness Timeline!`,
+      );
+
       // Reset for new entry
       setTitle("");
       setContent("");
@@ -197,10 +235,14 @@ export default function JournalingPage() {
   };
 
   const journalingPrompts = {
-    Neutral: "What is one small detail from today that made you pause and smile?",
-    Positive: "This is beautiful! What contributed most to these positive feelings today?",
-    Anxious: "Can you list 3 concrete physical objects around you right now? Focus on anchoring.",
-    Stressed: "If you could remove just one task from your plate today, what would it be?",
+    Neutral:
+      "What is one small detail from today that made you pause and smile?",
+    Positive:
+      "This is beautiful! What contributed most to these positive feelings today?",
+    Anxious:
+      "Can you list 3 concrete physical objects around you right now? Focus on anchoring.",
+    Stressed:
+      "If you could remove just one task from your plate today, what would it be?",
   };
 
   return (
@@ -225,7 +267,13 @@ export default function JournalingPage() {
         }}
       >
         {/* Header Title Input */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <input
             type="text"
             placeholder="Today's Reflection Title..."
@@ -261,11 +309,14 @@ export default function JournalingPage() {
                 width: "6px",
                 height: "6px",
                 borderRadius: "50%",
-                backgroundColor: saveStatus.includes("successfully") || saveStatus.includes("logs") || saveStatus.includes("Saved")
-                  ? "var(--color-success)"
-                  : saveStatus.includes("Saving")
-                  ? "var(--color-accent)"
-                  : "var(--text-secondary)",
+                backgroundColor:
+                  saveStatus.includes("successfully") ||
+                  saveStatus.includes("logs") ||
+                  saveStatus.includes("Saved")
+                    ? "var(--color-success)"
+                    : saveStatus.includes("Saving")
+                      ? "var(--color-accent)"
+                      : "var(--text-secondary)",
               }}
             />
             {saveStatus}
@@ -273,7 +324,9 @@ export default function JournalingPage() {
         </div>
 
         {/* Divider */}
-        <div style={{ height: "1px", backgroundColor: "var(--border-light)" }} />
+        <div
+          style={{ height: "1px", backgroundColor: "var(--border-light)" }}
+        />
 
         {/* Large Editor Canvas */}
         <textarea
@@ -294,28 +347,61 @@ export default function JournalingPage() {
         />
 
         {/* Action Bottom Bar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           {/* Reusable Voice Dictation module */}
           <button
             onClick={toggleVoiceInput}
             type="button"
             className="btn-secondary voice-dictate-pulse"
             style={{
-              borderColor: isListening ? "var(--color-error)" : "var(--color-secondary)",
-              color: isListening ? "var(--color-error)" : "var(--color-secondary)",
+              borderColor: isListening
+                ? "var(--color-error)"
+                : "var(--color-secondary)",
+              color: isListening
+                ? "var(--color-error)"
+                : "var(--color-secondary)",
               display: "flex",
               alignItems: "center",
               gap: "8px",
               padding: "10px 20px",
-              boxShadow: isListening ? "0 0 12px rgba(192, 118, 90, 0.2)" : "none",
+              boxShadow: isListening
+                ? "0 0 12px rgba(192, 118, 90, 0.2)"
+                : "none",
               animation: isListening ? "pulse-mic 1.5s infinite" : "none",
             }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill={isListening ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-            {isListening ? "Listening (Click to Stop)..." : "Dictate Reflection"}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill={isListening ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+            {isListening
+              ? "Listening (Click to Stop)..."
+              : "Dictate Reflection"}
           </button>
 
-          <button onClick={handleSave} className="btn-primary" style={{ padding: "12px 28px" }}>
+          <button
+            onClick={handleSave}
+            className="btn-primary"
+            style={{ padding: "12px 28px" }}
+          >
             Save Reflection
           </button>
         </div>
@@ -333,14 +419,25 @@ export default function JournalingPage() {
           textAlign: "center",
         }}
       >
-        <h3 style={{ fontSize: "18px", fontFamily: "var(--font-header)" }}>Reflection Insights</h3>
+        <h3 style={{ fontSize: "18px", fontFamily: "var(--font-header)" }}>
+          Reflection Insights
+        </h3>
 
         {/* Mascot */}
-        <Mascot pose={mascotPose} size={170} dialogue={isListening ? "I'm listening closely to your voice... Speak freely." : "Write freely, I'm here reflecting with you."} interactive={false} />
+        <Mascot pose={mascotPose} size={170} interactive={false} />
 
         {/* Dynamic Sentiment Tags */}
         <div style={{ width: "100%" }}>
-          <h4 style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          <h4
+            style={{
+              fontSize: "13px",
+              fontWeight: "600",
+              color: "var(--text-secondary)",
+              marginBottom: "8px",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}
+          >
             Detected Sentiment
           </h4>
           <div
@@ -368,10 +465,23 @@ export default function JournalingPage() {
             textAlign: "left",
           }}
         >
-          <h4 style={{ fontSize: "13px", fontWeight: "600", color: "var(--color-primary)", marginBottom: "6px" }}>
+          <h4
+            style={{
+              fontSize: "13px",
+              fontWeight: "600",
+              color: "var(--color-primary)",
+              marginBottom: "6px",
+            }}
+          >
             Coping Spark Prompt
           </h4>
-          <p style={{ fontSize: "13px", lineHeight: "1.5", color: "var(--text-primary)" }}>
+          <p
+            style={{
+              fontSize: "13px",
+              lineHeight: "1.5",
+              color: "var(--text-primary)",
+            }}
+          >
             {journalingPrompts[sentiment]}
           </p>
         </div>
@@ -379,9 +489,16 @@ export default function JournalingPage() {
 
       <style jsx global>{`
         @keyframes pulse-mic {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.03); box-shadow: 0 0 16px rgba(192, 118, 90, 0.4); }
-          100% { transform: scale(1); }
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.03);
+            box-shadow: 0 0 16px rgba(192, 118, 90, 0.4);
+          }
+          100% {
+            transform: scale(1);
+          }
         }
 
         .journal-title-input:focus {

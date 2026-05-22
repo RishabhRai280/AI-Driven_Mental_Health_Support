@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
 export type HamsterPose =
@@ -21,12 +21,15 @@ export type HamsterPose =
   | "examining-closely"
   | "running-excited";
 
+export type CompanionType = "golden-hamster" | "goldie" | "otter" | "pandi";
+
 export interface MascotProps {
   pose: HamsterPose;
   dialogue?: string;
   size?: number;
   className?: string;
   interactive?: boolean;
+  companionType?: CompanionType;
 }
 
 export default function Mascot({
@@ -35,9 +38,20 @@ export default function Mascot({
   size = 200,
   className = "",
   interactive = true,
+  companionType,
 }: MascotProps) {
   const [hovered, setHovered] = useState(false);
   const [clicked, setClicked] = useState(false);
+  const [compType, setCompType] = useState<CompanionType>("golden-hamster");
+
+  useEffect(() => {
+    const cached = localStorage.getItem("serenemind-companion-type");
+    if (cached) {
+      setCompType(cached as CompanionType);
+    }
+  }, []);
+
+  const activeCompanion = companionType || compType;
 
   // Map pose to a readable description or helper message
   const defaultBubbleText: Record<HamsterPose, string> = {
@@ -46,7 +60,7 @@ export default function Mascot({
     "holding-heart": "Remember that you are worthy of care, kindness, and love. I'm right here.",
     "sitting-zen": "Breathe in... Breathe out. Let's find our center together.",
     "escaping-energy": "Whoosh! It's okay to feel energetic or a bit anxious. Let's shake it off!",
-    "balancing-nut": "Trying to balance everything? Take it one tiny nut at a time.",
+    "balancing-nut": "Trying to balance everything? Take it one tiny step at a time.",
     "confused-question": "Hmm? Tell me more, let's untangle this puzzle together.",
     "head-scratching": "Oh, interesting! Let me ponder on that for a second...",
     "thinking-deeply": "Let's reflect on this. What does your heart tell you?",
@@ -60,7 +74,81 @@ export default function Mascot({
   };
 
   const bubbleText = dialogue || defaultBubbleText[pose] || "I'm right here with you.";
-  const imageSrc = `/mascot/golden-hamster-golden-hamster-${pose}.svg`;
+
+  // Dynamic file path routing based on selected companion type
+  let imageSrc = `/mascot/golden-hamster-golden-hamster-${pose}.svg`;
+
+  if (activeCompanion === "goldie") {
+    let goldiePose = "greeting";
+    if (pose === "waving-hello" || pose === "holding-heart" || pose === "lost-map") {
+      goldiePose = "greeting";
+    } else if (pose === "sitting-zen" || pose === "shy-peeking" || pose === "examining-closely") {
+      goldiePose = "listening";
+    } else if (pose === "escaping-energy" || pose === "running-excited") {
+      goldiePose = "zooming";
+    } else if (pose === "balancing-nut" || pose === "thinking-deeply" || pose === "holding-magnifying-glass") {
+      goldiePose = "thinking";
+    } else if (pose === "confused-question" || pose === "head-scratching") {
+      goldiePose = "confused";
+    } else if (pose === "sleeping-content") {
+      goldiePose = "sleeping";
+    } else if (pose === "celebrating-success") {
+      goldiePose = "celebrating";
+    } else if (pose === "carrying-basket") {
+      goldiePose = "holding-bone";
+    }
+    imageSrc = `/mascot/goldie-goldie-${goldiePose}.svg`;
+  } else if (activeCompanion === "otter") {
+    let otterPose = "yoga";
+    if (pose === "sitting-zen") {
+      otterPose = "yoga";
+    } else if (pose === "waving-hello" || pose === "celebrating-success") {
+      otterPose = "confetti";
+    } else if (pose === "shy-peeking") {
+      otterPose = "lounging";
+    } else if (pose === "holding-heart") {
+      otterPose = "in-love";
+    } else if (pose === "escaping-energy" || pose === "running-excited") {
+      otterPose = "skateboard";
+    } else if (pose === "balancing-nut") {
+      otterPose = "clipboard";
+    } else if (pose === "confused-question") {
+      otterPose = "error";
+    } else if (pose === "head-scratching") {
+      otterPose = "dropped-the-db";
+    } else if (pose === "thinking-deeply" || pose === "holding-magnifying-glass" || pose === "examining-closely") {
+      otterPose = "brainstorming";
+    } else if (pose === "sleeping-content") {
+      otterPose = "hammock";
+    } else if (pose === "carrying-basket") {
+      otterPose = "picnic";
+    } else if (pose === "lost-map") {
+      otterPose = "cloudwatching";
+    }
+    imageSrc = `/mascot/otter-otter-${otterPose}.svg`;
+  } else if (activeCompanion === "pandi") {
+    let pandiPose = "yoga";
+    if (pose === "sitting-zen") {
+      pandiPose = "yoga";
+    } else if (pose === "waving-hello" || pose === "celebrating-success" || pose === "holding-heart") {
+      pandiPose = "lounging";
+    } else if (pose === "shy-peeking") {
+      pandiPose = "lounging";
+    } else if (pose === "escaping-energy" || pose === "running-excited") {
+      pandiPose = "skateboard";
+    } else if (pose === "balancing-nut" || pose === "confused-question" || pose === "head-scratching") {
+      pandiPose = "clipboard";
+    } else if (pose === "thinking-deeply" || pose === "holding-magnifying-glass" || pose === "examining-closely") {
+      pandiPose = "research-development";
+    } else if (pose === "sleeping-content") {
+      pandiPose = "hammock";
+    } else if (pose === "carrying-basket") {
+      pandiPose = "picnic";
+    } else if (pose === "lost-map") {
+      pandiPose = "cloudwatching";
+    }
+    imageSrc = `/mascot/pandi-pandi-${pandiPose}.svg`;
+  }
 
   return (
     <div
@@ -87,15 +175,15 @@ export default function Mascot({
           style={{
             position: "absolute",
             bottom: `${size + 15}px`,
-            backgroundColor: "rgba(18, 19, 38, 0.85)",
+            backgroundColor: "rgba(18, 19, 38, 0.9)",
             color: "#EAE8E3",
             padding: "14px 18px",
             borderRadius: "18px",
-            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(167, 139, 250, 0.1)",
-            border: "1.5px solid rgba(167, 139, 250, 0.3)",
-            fontSize: "14px",
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(167, 139, 250, 0.15)",
+            border: "1.5px solid rgba(167, 139, 250, 0.35)",
+            fontSize: "13px",
             fontWeight: "500",
-            maxWidth: "250px",
+            maxWidth: "240px",
             textAlign: "center",
             zIndex: 10,
             animation: "fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
@@ -113,9 +201,9 @@ export default function Mascot({
               transform: "translateX(-50%) rotate(45deg)",
               width: "14px",
               height: "14px",
-              backgroundColor: "rgba(18, 19, 38, 0.85)",
-              borderRight: "1.5px solid rgba(167, 139, 250, 0.3)",
-              borderBottom: "1.5px solid rgba(167, 139, 250, 0.3)",
+              backgroundColor: "rgba(18, 19, 38, 0.9)",
+              borderRight: "1.5px solid rgba(167, 139, 250, 0.35)",
+              borderBottom: "1.5px solid rgba(167, 139, 250, 0.35)",
             }}
           />
         </div>
@@ -133,7 +221,7 @@ export default function Mascot({
       >
         <Image
           src={imageSrc}
-          alt={`Golden Hamster - ${pose}`}
+          alt={`SereneMind Mascot - ${pose}`}
           fill
           priority
           style={{
