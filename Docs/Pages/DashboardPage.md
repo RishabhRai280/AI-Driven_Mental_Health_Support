@@ -30,7 +30,7 @@ This wireframe details the structural, visual, and interactive specifications fo
 |  [Mood Analysis]     |                                                                                  |
 |  [Exercises]         |  B. QUICK ACTIONS (Grid: 2-Columns)                                              |
 |                      |  +-------------------------------------+ +-------------------------------------+  |
-|                      |  | 💬 Start Empathetic Session         | | 📝 Write Today's Journal            |  |
+|                      |  | Start Empathetic Session            | | Write Today's Journal               |  |
 |                      |  | "Chat with SereneAI in absolute     | | "Jot down your feelings, thoughts,  |  |
 |                      |  | privacy and find calm guidance."    | | and reflections to release stress."  |  |
 |                      |  |                 [Chat Now (Pill)]   | |               [Open Journal (Pill)]  |  |
@@ -107,10 +107,10 @@ This wireframe details the structural, visual, and interactive specifications fo
   * Style: Glass card container. Border-radius `20px; padding: 24px; border: 1.5px solid var(--border-light); display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; transition: all 0.2s ease;`.
   * Hover translation: border-color deepens slightly, card rises `translateY(-3px)`.
   * **Chat Card Call-to-action**:
-    * Headline: "💬 Chat Now", size `18px`, weight `500`. Text: "Start an empathetic private dialog.", size `14px`, color `--text-secondary`, margin `8px 0 16px 0`.
+    * Headline: "Chat Now", size `18px`, weight `500`. Text: "Start an empathetic private dialog.", size `14px`, color `--text-secondary`, margin `8px 0 16px 0`.
     * Pill Button: Fill `--color-primary` (`#5B7FA6`), White text, `border-radius: 20px; padding: 10px 20px; border: none; cursor: pointer; font-size: 14px; font-weight: 500;`. On click, routes to `/chatbot`.
   * **Journal Card Call-to-action**:
-    * Headline: "📝 Daily Journal", size `18px`. Text: "Reflect and release your inner thoughts.", size `14px`.
+    * Headline: "Daily Journal", size `18px`. Text: "Reflect and release your inner thoughts.", size `14px`.
     * Pill Button: Ghost Outline. Border `1.5px solid var(--color-secondary) (#7DAA8F)`, text color `--color-secondary`, `border-radius: 20px; padding: 10px 20px; background: transparent; cursor: pointer; font-size: 14px; font-weight: 500;`. Routes to `/journaling`.
 
 #### Widget C: Breathing Biofeedback Pacer

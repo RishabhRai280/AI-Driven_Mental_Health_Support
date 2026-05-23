@@ -28,15 +28,15 @@ This wireframe details the structural layout, color variables, and cognitive gro
 |  |                                                                                                   |  |
 |  |  A. IMMEDIATE DIRECT LIFELINES (Pill Buttons: Height: 48px, Gap: 16px)                             |  |
 |  |  +---------------------------------------------------------------------------------------------+  |  |
-|  |  |                 [📞 CALL EMERGENCY LIFELINE (Terracotta Fill, White Text)]                  |  |  |
+|  |  |                 [CALL EMERGENCY LIFELINE (Terracotta Fill, White Text)]                  |  |  |
 |  |  +---------------------------------------------------------------------------------------------+  |  |
 |  |  +---------------------------------------------------------------------------------------------+  |  |
-|  |  |                 [💬 TEXT CRISIS LINE (Terracotta Ghost Border, Sienna Text)]                   |  |  |
+|  |  |                 [TEXT CRISIS LINE (Terracotta Ghost Border, Sienna Text)]                   |  |  |
 |  |  +---------------------------------------------------------------------------------------------+  |  |
 |  |                                                                                                   |  |
 |  |  B. YOUR PERSONAL SUPPORT CONTACTS                                                                |  |
-|  |  [Icon: Heart] Dr. Evelyn Harper (Therapist)  ................................... [📞 Call Icon]   |  |
-|  |  [Icon: Heart] Sarah Jenkins (Primary Safe Contact) .............................. [📞 Call Icon]   |  |
+|  |  [Icon: Heart] Dr. Evelyn Harper (Therapist)  ................................... [Call Icon]   |  |
+|  |  [Icon: Heart] Sarah Jenkins (Primary Safe Contact) .............................. [Call Icon]   |  |
 |  |                                                                                                   |  |
 |  |  C. COPING & GROUNDING UTILITIES                                                                  |  |
 |  |  "Quick 5-4-3-2-1 Technique: Name 5 things you can see around you right now..."                    |  |

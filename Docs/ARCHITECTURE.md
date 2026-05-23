@@ -13,6 +13,7 @@ graph TD
     AIService <-->|API Calls| LLM[LLM Engine: Gemini / OpenAI API]
     AIService <-->|Local Inference| SentimentNLP[HuggingFace Transformers / Local NLP]
 ```
+* **Diagram Explanation**: Illustrates the platform's multi-container microservice ecosystem. Frontend clients communicate over secure HTTPS/TLS 1.3 and low-latency WebSockets with the main Node/Express API Gateway, which coordinates relational database access in PostgreSQL and routes private AI requests to the FastAPI Python service.
 
 ---
 
@@ -101,6 +102,7 @@ erDiagram
     USERS ||--o{ CHAT_SESSIONS : opens
     CHAT_SESSIONS ||--o{ CHAT_MESSAGES : contains
 ```
+* **Diagram Explanation**: Depicts the database ER schema mapping relational foreign-key references. Each authenticated User accounts maps to multiple Mood Logs, Chat Sessions, and Journals, securing sensitive details behind column-level cryptographic isolation.
 
 ### 2.1. Cryptographic Isolation Strategy
 To maintain absolute compliance and prevent data exposure in the event of a database compromise:

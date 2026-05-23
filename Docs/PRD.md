@@ -85,6 +85,7 @@ graph TD
     C --> H[Enable Quick-Call Action Button]
     C --> I[Log Safety Event Anonymously for Audit]
 ```
+* **Diagram Explanation**: Illustrates the crisis intercept control flow. Any text input containing clinical safety risk triggers immediately bypasses the conversational LLM responses, redirects the UI layout to the SOS Crisis Intervention screen, displays local emergency help contacts (e.g., 988), and logs the safety occurrence.
 
 ### 4.1. Real-Time Safety Classifier
 *   **Scanning**: Every user-submitted message in the chat and journal is scanned immediately before processing.

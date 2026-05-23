@@ -60,14 +60,14 @@ The palette draws from three psychological anchors:
 
 | Combination | Hex Values | Ratio | Level |
 |-------------|-----------|-------|-------|
-| Primary text on page background | `#2C2F35` on `#F4F1EC` | **11.2:1** | ✅ AAA |
-| White text on primary button | `#FFFFFF` on `#5B7FA6` | **4.8:1** | ✅ AA |
-| Secondary text on background | `#6B7280` on `#F4F1EC` | **4.6:1** | ✅ AA |
-| Light text on dark background | `#EAE8E3` on `#1E2228` | **12.4:1** | ✅ AAA |
-| Cream on dark card surface | `#EAE8E3` on `#2A2F38` | **10.6:1** | ✅ AAA |
-| Success color on light background | `#5A9475` on `#F4F1EC` | **4.7:1** | ✅ AA |
-| Alert/terracotta on light background | `#C0765A` on `#F4F1EC` | **3.8:1** | ⚠️ AA (large text/UI only) |
-| Dark text on sage surface | `#1C4A36` on `#7DAA8F` | **7.1:1** | ✅ AAA |
+| Primary text on page background | `#2C2F35` on `#F4F1EC` | **11.2:1** | Pass (AAA) |
+| White text on primary button | `#FFFFFF` on `#5B7FA6` | **4.8:1** | Pass (AA) |
+| Secondary text on background | `#6B7280` on `#F4F1EC` | **4.6:1** | Pass (AA) |
+| Light text on dark background | `#EAE8E3` on `#1E2228` | **12.4:1** | Pass (AAA) |
+| Cream on dark card surface | `#EAE8E3` on `#2A2F38` | **10.6:1** | Pass (AAA) |
+| Success color on light background | `#5A9475` on `#F4F1EC` | **4.7:1** | Pass (AA) |
+| Alert/terracotta on light background | `#C0765A` on `#F4F1EC` | **3.8:1** | Pass (AA - large text/UI only) |
+| Dark text on sage surface | `#1C4A36` on `#7DAA8F` | **7.1:1** | Pass (AAA) |
 
 > **Important:** The terracotta alert color (`#C0765A`) at 3.8:1 meets AA for large text and UI components only. It **must always pair with an icon and helper text** — never use color alone as the sole error signal.
 

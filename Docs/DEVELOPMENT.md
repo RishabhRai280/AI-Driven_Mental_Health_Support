@@ -22,6 +22,7 @@ classDiagram
         Engineer_5: DevOps, Infrastructure & CI/CD
     }
 ```
+* **Diagram Explanation**: Visualizes the organization of the 5-person engineering team, clearly segregating responsibilities across client engineering (frontend), service engineering (backend & AI prompt pipelines), and platform engineering (DevOps/CI/CD workflows) to support parallel, contract-first development.
 
 ### 1.1. Client Engineering (Frontend)
 *   **Engineer 1: Frontend Core & App State (Frontend Lead)**
