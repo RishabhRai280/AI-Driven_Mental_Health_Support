@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import pool from "../db";
 import { requireAuth, AuthRequest } from "../middleware/auth";
+import { generateChatReply, generateWelcomeGreeting } from "../lib/groq";
 
 const router = Router();
 
@@ -91,7 +92,161 @@ router.post("/", requireAuth, async (req: AuthRequest, res: Response): Promise<v
     });
   } catch (err) {
     console.error("POST /api/chats error:", err);
-    res.status(500).json({ error: "Failed to save chat message." });
+    res.status(501).json({ error: "Failed to save chat message." }); // Kept standard fallback
+  }
+});
+
+
+// ── POST /api/chats/welcome ────────────────────────────────────────────────────
+// Generate a dynamic welcome greeting for a session (checking completed exercises/tasks)
+router.post("/welcome", requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.user!.id;
+  const { sessionId } = req.body;
+
+  if (!sessionId) {
+    res.status(400).json({ error: "sessionId is required." });
+    return;
+  }
+
+  try {
+    // Check if a welcome message already exists in this sessionId
+    const existing = await pool.query(
+      `SELECT id, session_id, sender, text, created_at
+       FROM chat_messages
+       WHERE user_id = $1 AND session_id = $2 AND sender = 'companion'
+       ORDER BY created_at ASC
+       LIMIT 1`,
+      [userId, sessionId]
+    );
+
+    if (existing.rows.length > 0) {
+      const row = existing.rows[0];
+      res.json({
+        reply: {
+          id: row.id,
+          sessionId: row.session_id,
+          sender: "sparky", // Map to sparky for client-side adopted backward-compatibility
+          text: row.text,
+          timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
+        pose: "waving-hello"
+      });
+      return;
+    }
+
+    // Generate dynamic LLaMA welcome greeting
+    const { reply, pose } = await generateWelcomeGreeting(userId);
+
+    // Save Sparky's response to database
+    const saveRes = await pool.query(
+      `INSERT INTO chat_messages (user_id, session_id, sender, text)
+       VALUES ($1, $2, 'companion', $3)
+       RETURNING id, session_id, sender, text, created_at`,
+      [userId, sessionId, reply]
+    );
+
+    const row = saveRes.rows[0];
+    res.status(201).json({
+      reply: {
+        id: row.id,
+        sessionId: row.session_id,
+        sender: "sparky", // Map to sparky for client-side adopted backward-compatibility
+        text: row.text,
+        timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      },
+      pose,
+    });
+  } catch (err) {
+    console.error("POST /api/chats/welcome error:", err);
+    res.status(500).json({ error: "Failed to generate or save chat welcome greeting." });
+  }
+});
+
+// ── POST /api/chats/reply ──────────────────────────────────────────────────────
+// Save user message, query Groq with full context, save companion reply, return both + pose
+router.post("/reply", requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.user!.id;
+  const { sessionId, text } = req.body;
+
+  if (!sessionId || !text) {
+    res.status(400).json({ error: "sessionId and text are required." });
+    return;
+  }
+
+  try {
+    // 1. Save User's incoming message in database (using companion-compliant user value)
+    await pool.query(
+      `INSERT INTO chat_messages (user_id, session_id, sender, text)
+       VALUES ($1, $2, 'user', $3)`,
+      [userId, sessionId, text]
+    );
+
+    // 2. Fetch mascot name for unified logging (timeline)
+    const mascotRes = await pool.query("SELECT name FROM mascots WHERE user_id = $1", [userId]);
+    const mascotName = mascotRes.rows[0]?.name || "Companion";
+
+    // 3. Save User message to wellness logs timeline in background (using deep emotional state detection)
+    let detectedSentiment = "Reflective";
+    const lower = text.toLowerCase();
+    if (lower.includes("happy") || lower.includes("glad") || lower.includes("peace") || lower.includes("joy") || lower.includes("excited")) {
+      detectedSentiment = "Happy";
+    } else if (lower.includes("hope") || lower.includes("try") || lower.includes("hopeful") || lower.includes("better")) {
+      detectedSentiment = "Hopeful";
+    } else if (lower.includes("motivated") || lower.includes("focus") || lower.includes("ready") || lower.includes("start")) {
+      detectedSentiment = "Motivated";
+    } else if (lower.includes("stuck") || lower.includes("don't know") || lower.includes("dont know") || lower.includes("confused") || lower.includes("why")) {
+      detectedSentiment = "Confused";
+    } else if (lower.includes("avoid") || lower.includes("can't start") || lower.includes("overwhelmed") || lower.includes("too much") || lower.includes("pile")) {
+      detectedSentiment = "Overwhelmed";
+    } else if (lower.includes("burnout") || lower.includes("burned out") || lower.includes("exhausted") || lower.includes("can't anymore")) {
+      detectedSentiment = "Burned Out";
+    } else if (lower.includes("tired") || lower.includes("numb") || lower.includes("empty") || lower.includes("disconnected") || lower.includes("no energy") || lower.includes("drained")) {
+      detectedSentiment = lower.includes("numb") ? "Emotionally Numb" : "Drained";
+    } else if (lower.includes("anxious") || lower.includes("scared") || lower.includes("worry") || lower.includes("panic")) {
+      detectedSentiment = "Anxious";
+    } else if (lower.includes("lonely") || lower.includes("alone") || lower.includes("miss")) {
+      detectedSentiment = "Lonely";
+    } else if (lower.includes("angry") || lower.includes("mad") || lower.includes("frustrated") || lower.includes("annoyed")) {
+      detectedSentiment = "Frustrated";
+    } else if (lower.includes("sad") || lower.includes("cry") || lower.includes("hurt") || lower.includes("grief")) {
+      detectedSentiment = "Sad";
+    } else if (lower.includes("lazy") || lower.includes("fail") || lower.includes("should") || lower.includes("self-doubt")) {
+      detectedSentiment = "Self-Doubting";
+    } else if (lower.includes("calm") || lower.includes("peaceful") || lower.includes("relax")) {
+      detectedSentiment = "Calm";
+    }
+    
+    await pool.query(
+      `INSERT INTO wellness_logs (user_id, type, title, preview, sentiment)
+       VALUES ($1, 'chat', $2, $3, $4)`,
+      [userId, `Companion chat with ${mascotName}`, `Vent details: "${text.length > 80 ? text.slice(0, 80) + '...' : text}"`, detectedSentiment]
+    );
+
+    // 4. Generate AI companion reply and pose using Groq LLaMA prompt
+    const { reply, pose } = await generateChatReply(userId, text, sessionId);
+
+    // 5. Save Sparky's response to database (using companion-compliant companion value)
+    const companionMsgRes = await pool.query(
+      `INSERT INTO chat_messages (user_id, session_id, sender, text)
+       VALUES ($1, $2, 'companion', $3)
+       RETURNING id, session_id, sender, text, created_at`,
+      [userId, sessionId, reply]
+    );
+
+    const row = companionMsgRes.rows[0];
+    res.status(201).json({
+      reply: {
+        id: row.id,
+        sessionId: row.session_id,
+        sender: "sparky", // Map to sparky for client-side adopted backward-compatibility
+        text: row.text,
+        timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      },
+      pose,
+    });
+  } catch (err) {
+    console.error("POST /api/chats/reply error:", err);
+    res.status(500).json({ error: "Failed to generate or save chat reply." });
   }
 });
 

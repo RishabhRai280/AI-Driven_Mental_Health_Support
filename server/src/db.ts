@@ -97,8 +97,16 @@ export async function testConnection(): Promise<void> {
         FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
     `);
 
+    // Alter journals table to support dynamic Groq CBT reflection insights
+    await client.query(`
+      ALTER TABLE journals 
+      ADD COLUMN IF NOT EXISTS summary TEXT,
+      ADD COLUMN IF NOT EXISTS coping_strategies TEXT,
+      ADD COLUMN IF NOT EXISTS mascot_pose VARCHAR(50);
+    `);
+
     client.release();
-    console.log("[DB Success] PostgreSQL connected successfully & profiles/personas schemas verified.");
+    console.log("[DB Success] PostgreSQL connected successfully & profiles/personas/journals schemas verified.");
   } catch (err) {
     console.warn("[DB Warning] PostgreSQL connection failed, falling back to development mode:", err);
     console.warn("   Run: docker-compose up -d");

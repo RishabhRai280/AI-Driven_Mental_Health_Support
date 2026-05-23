@@ -37,6 +37,50 @@ export default function ChatbotPage() {
   const [companionName, setCompanionName] = useState("Sparky");
   const [assignedPersonaName, setAssignedPersonaName] = useState("Beginner Wellness User");
 
+  // Daily Self-Care Checklist state (synced with Exercises page)
+  interface Habit {
+    id: string;
+    label: string;
+    desc: string;
+    color: string;
+  }
+
+  const DEFAULT_HABITS: Habit[] = [
+    {
+      id: "water",
+      label: "Drink 2 Liters of Water",
+      desc: "Hydrate brain tissues to diminish physical panic triggers.",
+      color: "var(--color-primary)",
+    },
+    {
+      id: "breathing",
+      label: "Complete Guided Breathing Pacer",
+      desc: "4-minute box breathing session to reset the autonomic nervous system.",
+      color: "var(--color-success)",
+    },
+    {
+      id: "screentime",
+      label: "No Screen Time 1hr Before Bed",
+      desc: "Keep blue light away to naturally induce deep REM sleep.",
+      color: "var(--color-accent)",
+    },
+    {
+      id: "outdoors",
+      label: "30-Minute Outdoor Activity",
+      desc: "Lowers cortisol levels and helps clear circulatory paths.",
+      color: "var(--color-secondary)",
+    },
+    {
+      id: "journal",
+      label: "Log Evening Reflection Journal",
+      desc: "Record emotional trends and receive sentiment metrics.",
+      color: "var(--color-error)",
+    },
+  ];
+
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [completedHabits, setCompletedHabits] = useState<string[]>([]);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Auto scroll to bottom
@@ -44,25 +88,39 @@ export default function ChatbotPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  // Load Adopted Mascot Name and computed Persona on mount
+  // Load Adopted Mascot Name, computed Persona, and dynamic Welcome greeting on mount
   useEffect(() => {
     async function loadCompanionDetails() {
       try {
         const data = await api.get<{ mascot: { name: string } | null; assignedPersona: { persona_name: string } | null }>("/api/mascot");
+        let mascotDisplayName = "Sparky";
         if (data.mascot) {
           setCompanionName(data.mascot.name);
+          mascotDisplayName = data.mascot.name;
+        }
+        if (data.assignedPersona) {
+          setAssignedPersonaName(data.assignedPersona.persona_name);
+        }
+
+        // Fetch dynamic LLaMA welcome greeting from backend
+        try {
+          const welcomeData = await api.post<{ reply: ChatMessage; pose: HamsterPose }>("/api/chats/welcome", { sessionId });
+          if (welcomeData && welcomeData.reply) {
+            setMessages([welcomeData.reply]);
+            setMascotPose(welcomeData.pose || "waving-hello");
+            setMascotDialogue(welcomeData.reply.text);
+          }
+        } catch (welcomeErr) {
+          console.error("Failed to fetch dynamic welcome greeting, using fallback:", welcomeErr);
           setMessages([
             {
               id: "welcome",
               sessionId,
               sender: "sparky",
-              text: `Hello! I'm ${data.mascot.name}, your SereneMind AI companion. Whether you want to vent, practice a coping mechanism, or just chat, I'm here for you.`,
+              text: `Hello! I'm ${mascotDisplayName}, your SereneMind AI companion. Whether you want to vent, practice a coping mechanism, or just chat, I'm here for you.`,
               timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             }
           ]);
-        }
-        if (data.assignedPersona) {
-          setAssignedPersonaName(data.assignedPersona.persona_name);
         }
       } catch (err) {
         console.error("Failed to load companion details in chatbot:", err);
@@ -70,6 +128,58 @@ export default function ChatbotPage() {
     }
     loadCompanionDetails();
   }, [sessionId]);
+
+  // Load habits checklist from LocalStorage on mount
+  useEffect(() => {
+    const savedCatalog = localStorage.getItem("sm_custom_habits_catalog");
+    if (savedCatalog) {
+      setHabits(JSON.parse(savedCatalog));
+    } else {
+      setHabits(DEFAULT_HABITS);
+      localStorage.setItem("sm_custom_habits_catalog", JSON.stringify(DEFAULT_HABITS));
+    }
+
+    const today = new Date().toDateString();
+    const stored = localStorage.getItem(`sm_daily_habits_${today}`);
+    if (stored) {
+      setCompletedHabits(JSON.parse(stored));
+    }
+  }, []);
+
+  const handleToggleHabit = async (habitId: string, habitLabel: string) => {
+    const today = new Date().toDateString();
+    let updated: string[];
+    const isAdding = !completedHabits.includes(habitId);
+
+    if (isAdding) {
+      updated = [...completedHabits, habitId];
+
+      // Cheer and celebrate reactively in the chatbot!
+      setMascotPose("celebrating-success");
+      setMascotDialogue(`Hooray! You completed "${habitLabel}"! You're doing awesome at keeping up with your self-care checklist! 🎉`);
+
+      // Log to backend wellness timeline
+      try {
+        await api.post("/api/wellness", {
+          type: "exercise",
+          title: `Daily Habit Completed: ${habitLabel}`,
+          preview: `Completed the daily behavior milestone: "${habitLabel}". Positive habits trigger gradual behavioral changes.`,
+          sentiment: "Positive",
+        });
+      } catch (err) {
+        console.error("Failed to save habit log:", err);
+      }
+    } else {
+      updated = completedHabits.filter((h) => h !== habitId);
+
+      // Curious reaction when unchecking
+      setMascotPose("confused-question");
+      setMascotDialogue(`Ah, took back "${habitLabel}"? No worries, let's pace ourselves!`);
+    }
+
+    setCompletedHabits(updated);
+    localStorage.setItem(`sm_daily_habits_${today}`, JSON.stringify(updated));
+  };
 
   // Safety trigger checker
   const checkSafetyTriggers = (text: string) => {
@@ -185,97 +295,54 @@ export default function ChatbotPage() {
     setInputVal("");
     checkSafetyTriggers(userMsgText);
 
-    // Persist user message to DB
-    let detectedSentiment = "Neutral";
-    if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good") || userMsgText.toLowerCase().includes("glad")) {
-      detectedSentiment = "Positive";
-    } else if (userMsgText.toLowerCase().includes("anxious") || userMsgText.toLowerCase().includes("panic")) {
-      detectedSentiment = "Anxious";
-    } else if (userMsgText.toLowerCase().includes("stress") || userMsgText.toLowerCase().includes("overwhelm")) {
-      detectedSentiment = "Stressed";
-    }
-
-    // Save user message to DB in background
-    api.post("/api/chats", { sessionId, sender: "user", text: userMsgText }).catch(console.error);
-    // Save to wellness timeline
-    api.post("/api/wellness", {
-      type: "chat",
-      title: `Companion chat with ${companionName}`,
-      preview: `Vent details: "${userMsgText.length > 80 ? userMsgText.slice(0, 80) + "..." : userMsgText}"`,
-      sentiment: detectedSentiment,
-    }).catch(console.error);
-
     // Swap mascot to cognitive head-scratching typing state
     setIsTyping(true);
     setMascotPose("head-scratching");
     setMascotDialogue("Let me think about that carefully...");
 
-    // Generate companion response
-    setTimeout(async () => {
+    try {
+      // 1. Post to unified chatbot reply endpoint
+      const res = await api.post<{ reply: ChatMessage; pose: HamsterPose }>("/api/chats/reply", {
+        sessionId,
+        text: userMsgText,
+      });
+
       setIsTyping(false);
-      const companionReaction = getReactivePose(userMsgText);
-      setMascotPose(companionReaction.pose);
-      setMascotDialogue(companionReaction.dialogue);
-
-      let sparkyReply = `I understand how you feel. Let's talk about it some more. What feels most supportive for you right now?`;
       
-      if (assignedPersonaName === "Student Stress") {
-        sparkyReply = `As your academic-mindful mentor, I hear you. High workloads are challenging, but remember that your wellness always comes first. How can we make some supportive space for you today?`;
-        if (userMsgText.toLowerCase().includes("anxious") || userMsgText.toLowerCase().includes("panic")) {
-          sparkyReply = `Academic pressure and anxiety are a heavy mix. Close your books for just 5 minutes, relax your shoulders, and let's try our guided 5-4-3-2-1 Somatic Grounding exercise together. You've got this.`;
-        } else if (userMsgText.toLowerCase().includes("stress") || userMsgText.toLowerCase().includes("overwhelm")) {
-          sparkyReply = `A high study load can trigger intense overwhelm. Let's break it down into smaller, actionable chunks: what is ONE single item we can complete right now, and let the rest sit? Breathe with me.`;
-        } else if (userMsgText.toLowerCase().includes("sad") || userMsgText.toLowerCase().includes("lonely")) {
-          sparkyReply = `It is completely natural to feel isolated under academic pressure. Please remember your worth is not tied to grades. I am right here listening, and you don't have to carry this alone.`;
-        } else if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good")) {
-          sparkyReply = `That is fantastic! Celebrating positive moments and small victories is so critical for study-life balance. What made you feel so bright today?`;
-        }
-      } else if (assignedPersonaName === "Burnout Professional") {
-        sparkyReply = `As your workplace mental health coach, I highly recommend shutting down all screens, rolling your shoulders back, and releasing physical jaw tension. What feels most restful for you right now?`;
-        if (userMsgText.toLowerCase().includes("anxious") || userMsgText.toLowerCase().includes("panic")) {
-          sparkyReply = `Workplace anxiety can trigger a rapid heart rate. Let's try 3 slow rounds of 4-4-4-4 Box Breathing right now to signal safety to your nervous system. Step away from the desk.`;
-        } else if (userMsgText.toLowerCase().includes("stress") || userMsgText.toLowerCase().includes("overwhelm")) {
-          sparkyReply = `Burnout occurs when stress exceeds rest. Let's establish a hard boundary: close all work tabs, step away, and let's take a cool drink of water. We can handle it one micro-step at a time.`;
-        } else if (userMsgText.toLowerCase().includes("sad") || userMsgText.toLowerCase().includes("lonely")) {
-          sparkyReply = `Career pressure can feel incredibly isolating. Please remember that you are more than your job or output. I am right here holding space for you.`;
-        } else if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good")) {
-          sparkyReply = `Wonderful! Taking time to celebrate wins and accomplishments is vital for mental health at work. What brightened up your day?`;
-        }
-      } else if (assignedPersonaName === "Isolated User") {
-        sparkyReply = `As your uplifting, warm companion, I'm so glad you're here. You are incredibly valuable, and I'm right here walking with you every single day. Tell me what's on your mind.`;
-        if (userMsgText.toLowerCase().includes("anxious") || userMsgText.toLowerCase().includes("panic")) {
-          sparkyReply = `When anxiety makes you feel alone, remember I am right here in this safe space with you. Let's ground ourselves: what are three distinct things you can hear or touch right now?`;
-        } else if (userMsgText.toLowerCase().includes("stress") || userMsgText.toLowerCase().includes("overwhelm")) {
-          sparkyReply = `Carrying everything by yourself is heavy. You don't have to face it all alone. Let's start with a gentle, self-compassion check-in. Tell me how I can best support you.`;
-        } else if (userMsgText.toLowerCase().includes("sad") || userMsgText.toLowerCase().includes("lonely")) {
-          sparkyReply = `I hear you, and it's completely okay to feel lonely. I am right here, and we can take a slow, deep breath together. You are deeply cared for in this space.`;
-        } else if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good")) {
-          sparkyReply = `Hearing this makes me so happy! Sharing positive moments is a beautiful way to connect. Tell me more about what brought you this joy!`;
-        }
-      } else {
-        if (userMsgText.toLowerCase().includes("anxious")) {
-          sparkyReply = `Feeling anxious is really uncomfortable. When anxiety hits, try to focus on physical anchors. Let's try our dashboard Breathing visualizer together, or tell me what is happening right now.`;
-        } else if (userMsgText.toLowerCase().includes("stress")) {
-          sparkyReply = `Overwhelm comes when we try to solve everything at once. Let's take a deep breath, write a simple bulleted list of 2 tiny things you can do today, and let the rest sit.`;
-        } else if (userMsgText.toLowerCase().includes("sad")) {
-          sparkyReply = `It's completely okay to feel sad. You don't have to put on a brave face. Just let the feelings be, and know that I am right here listening.`;
-        } else if (userMsgText.toLowerCase().includes("happy") || userMsgText.toLowerCase().includes("good") || userMsgText.toLowerCase().includes("great")) {
-          sparkyReply = `That's fantastic! Celebrating positive moments is so critical for cognitive balance. What made you feel so bright today?`;
-        }
-      }
+      // 2. Add companion message
+      setMessages((prev) => [...prev, res.reply]);
+      
+      // 3. Update Mascot state reactively from Groq
+      setMascotPose(res.pose);
+      
+      // 4. Update Mascot dialogue bubble text
+      setMascotDialogue(res.reply.text);
 
-      const sparkyMsg: ChatMessage = {
+    } catch (err) {
+      console.error("Chatbot API response error:", err);
+      setIsTyping(false);
+      setMascotPose("confused-question");
+      setMascotDialogue("I had a little hiccup connecting, but I'm listening! Tell me more.");
+      
+      // Fallback local simulation in case of connection failure
+      const fallbackResponse = getReactivePose(userMsgText);
+      let sparkyReply = "I understand. I'm right here listening.";
+      if (userMsgText.toLowerCase().includes("anxious")) {
+        sparkyReply = "Feeling anxious is tough. Close your eyes, drop your shoulders, and breathe with me.";
+      } else if (userMsgText.toLowerCase().includes("stress")) {
+        sparkyReply = "Overwhelm comes when we carry too much. What is one tiny thing we can solve now?";
+      }
+      
+      const fallbackMsg: ChatMessage = {
         id: Math.random().toString(),
         sessionId,
         sender: "sparky",
         text: sparkyReply,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
-
-      setMessages((prev) => [...prev, sparkyMsg]);
-      // Persist Sparky reply to DB
+      setMessages((prev) => [...prev, fallbackMsg]);
       api.post("/api/chats", { sessionId, sender: "sparky", text: sparkyReply }).catch(console.error);
-    }, 1500);
+    }
   };
 
   return (
@@ -485,68 +552,214 @@ export default function ChatbotPage() {
         </form>
       </div>
 
-      {/* Right Column - Mascot Feedback Panel */}
+      {/* Right Column - Mascot Feedback Panel & Daily Self-Care Checklist */}
       <div
-        className="glass-card"
         style={{
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "24px",
-          textAlign: "center",
+          gap: "24px",
+          overflowY: "auto",
+          maxHeight: "calc(100vh - 144px)",
+          paddingRight: "4px"
         }}
       >
-        <h3 style={{ fontSize: "18px", fontFamily: "var(--font-header)", marginBottom: "20px" }}>Sparky Companion</h3>
-        <Mascot pose={mascotPose} size={180} dialogue={mascotDialogue} interactive={false} />
+        {/* Mascot Card */}
+        <div
+          className="glass-card"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            padding: "24px",
+            textAlign: "center",
+          }}
+        >
+          <h3 style={{ fontSize: "17px", fontFamily: "var(--font-header)", marginBottom: "16px", fontWeight: "600" }}>
+            {companionName} Companion
+          </h3>
+          <Mascot pose={mascotPose} size={150} dialogue={mascotDialogue} interactive={false} />
 
-        <div style={{ marginTop: "32px", width: "100%" }}>
-          <h4 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px" }}>Sparky&apos;s Emotion Control</h4>
-          <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "16px" }}>
-            Sparky reacts automatically, but you can manually ask how he is feeling too:
-          </p>
+          {/* Dynamic Companion Mood Status Card */}
+          {(() => {
+            const getPoseDetails = (pose: string): { promise: string; bg: string; border: string; color: string } => {
+              switch (pose) {
+                case "waving-hello":
+                  return { promise: "I am so incredibly happy you're here beside me.", bg: "rgba(79, 110, 138, 0.08)", border: "rgba(79, 110, 138, 0.25)", color: "#7FA3C1" };
+                case "holding-heart":
+                  return { promise: "You are deeply valued, and I'm right here holding you close.", bg: "rgba(224, 130, 131, 0.08)", border: "rgba(224, 130, 131, 0.25)", color: "#E08283" };
+                case "sitting-zen":
+                  return { promise: "Let's just take a quiet, calm moment together. No rush at all.", bg: "rgba(90, 148, 117, 0.08)", border: "rgba(90, 148, 117, 0.25)", color: "#5A9475" };
+                case "escaping-energy":
+                  return { promise: "I've always got your back. You are completely safe with me.", bg: "rgba(235, 151, 78, 0.08)", border: "rgba(235, 151, 78, 0.25)", color: "#EB974E" };
+                case "balancing-nut":
+                  return { promise: "You don't have to carry the whole world tonight. Let's just rest.", bg: "rgba(169, 146, 196, 0.08)", border: "rgba(169, 146, 196, 0.25)", color: "#A992C4" };
+                case "confused-question":
+                  return { promise: "I love hearing what's on your mind. Tell me everything.", bg: "rgba(245, 215, 110, 0.08)", border: "rgba(245, 215, 110, 0.25)", color: "#F5D76E" };
+                case "celebrating-success":
+                  return { promise: "I am so incredibly proud of you! You are doing amazing.", bg: "rgba(244, 208, 63, 0.08)", border: "rgba(244, 208, 63, 0.25)", color: "#F4D03F" };
+                case "thinking-deeply":
+                  return { promise: "I am listening to every word you say. You have my full attention.", bg: "rgba(107, 185, 240, 0.08)", border: "rgba(107, 185, 240, 0.25)", color: "#6BB9F0" };
+                case "sleeping-content":
+                  return { promise: "Rest warm and cozy. I'll be right here watching over you.", bg: "rgba(191, 85, 236, 0.08)", border: "rgba(191, 85, 236, 0.25)", color: "#BF55EC" };
+                case "head-scratching":
+                  return { promise: "Reflecting carefully on how to support you best.", bg: "rgba(149, 165, 166, 0.08)", border: "rgba(149, 165, 166, 0.25)", color: "#95A5A6" };
+                default:
+                  return { promise: "I am here with you, always and forever.", bg: "rgba(255, 255, 255, 0.04)", border: "var(--border-light)", color: "var(--text-secondary)" };
+              }
+            };
+            const details = getPoseDetails(mascotPose);
+            return (
+              <div style={{ marginTop: "24px", width: "100%" }}>
+                <h4 style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px", textAlign: "left" }}>
+                  {companionName}&apos;s Promise
+                </h4>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px 16px",
+                    borderRadius: "16px",
+                    backgroundColor: details.bg,
+                    border: `1.5px solid ${details.border}`,
+                    boxShadow: "var(--shadow-subtle)",
+                    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                >
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", flex: 1 }}>
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "600",
+                        color: details.color,
+                        transition: "color 0.4s ease",
+                        textAlign: "left",
+                        lineHeight: "1.4"
+                      }}
+                    >
+                      &ldquo;{details.promise}&rdquo;
+                    </span>
+                    <span style={{ fontSize: "11px", color: "var(--text-secondary)", textAlign: "left" }}>
+                      Always by your side
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-            <button
-              onClick={() => {
-                setMascotPose("sitting-zen");
-                setMascotDialogue("I am deep in meditation. Breathe in peace.");
+        {/* Daily Self-Care Checklist Card */}
+        <div
+          className="glass-card"
+          style={{
+            padding: "24px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ fontSize: "16px", fontFamily: "var(--font-header)", fontWeight: "600" }}>
+              Daily Self-Care
+            </h3>
+            <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "500" }}>
+              {completedHabits.length}/{habits.length} Done
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ width: "100%", height: "6px", backgroundColor: "rgba(255,255,255,0.06)", borderRadius: "3px", overflow: "hidden" }}>
+            <div 
+              style={{ 
+                width: `${habits.length > 0 ? (completedHabits.length / habits.length) * 100 : 0}%`, 
+                height: "100%", 
+                backgroundColor: "var(--color-success)", 
+                borderRadius: "3px",
+                transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+              }} 
+            />
+          </div>
+
+          {/* Checklist items */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "4px", overflowY: "auto", maxHeight: "220px", paddingRight: "4px" }}>
+            {habits.map((h) => {
+              const isChecked = completedHabits.includes(h.id);
+              return (
+                <div 
+                  key={h.id}
+                  onClick={() => handleToggleHabit(h.id, h.label)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    backgroundColor: isChecked ? "rgba(90, 148, 117, 0.04)" : "rgba(255, 255, 255, 0.01)",
+                    border: isChecked ? "1px solid rgba(90, 148, 117, 0.15)" : "1px solid var(--border-light)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                  className="checklist-item-hover"
+                >
+                  {/* Custom checkbox */}
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "6px",
+                      border: isChecked ? `2px solid ${h.color || "var(--color-success)"}` : "2px solid var(--border-input)",
+                      backgroundColor: isChecked ? (h.color || "var(--color-success)") : "transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "all 0.2s ease",
+                      flexShrink: 0
+                    }}
+                  >
+                    {isChecked && (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    )}
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                    <span 
+                      style={{ 
+                        fontSize: "13px", 
+                        fontWeight: "500", 
+                        color: isChecked ? "var(--text-secondary)" : "var(--text-primary)",
+                        textDecoration: isChecked ? "line-through" : "none",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      {h.label}
+                    </span>
+                    <span style={{ fontSize: "11px", color: "var(--text-secondary)", lineHeight: "1.3" }}>
+                      {h.desc.length > 50 ? h.desc.slice(0, 50) + "..." : h.desc}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ borderTop: "1px solid var(--border-light)", paddingTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
+              Need guided exercises?
+            </span>
+            <Link 
+              href="/exercises" 
+              style={{ 
+                fontSize: "11px", 
+                color: "var(--color-primary)", 
+                fontWeight: "600",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px"
               }}
-              className="btn-secondary"
-              style={{ padding: "8px", fontSize: "12px", borderRadius: "12px" }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", marginRight: "6px", verticalAlign: "middle" }}><path d="M12 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/><path d="M12 12a6 6 0 0 0-6 6v3h12v-3a6 6 0 0 0-6-6z"/></svg>Zen
-            </button>
-            <button
-              onClick={() => {
-                setMascotPose("celebrating-success");
-                setMascotDialogue("Let's celebrate our small mindfulness steps!");
-              }}
-              className="btn-secondary"
-              style={{ padding: "8px", fontSize: "12px", borderRadius: "12px" }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", marginRight: "6px", verticalAlign: "middle" }}><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>Happy
-            </button>
-            <button
-              onClick={() => {
-                setMascotPose("thinking-deeply");
-                setMascotDialogue("Pondering. Emotional depth is a beautiful thing.");
-              }}
-              className="btn-secondary"
-              style={{ padding: "8px", fontSize: "12px", borderRadius: "12px" }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", marginRight: "6px", verticalAlign: "middle" }}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-4.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-4.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2z"/></svg>Thoughtful
-            </button>
-            <button
-              onClick={() => {
-                setMascotPose("sleeping-content");
-                setMascotDialogue("All safe, cozy, and tucked in. Zzz...");
-              }}
-              className="btn-secondary"
-              style={{ padding: "8px", fontSize: "12px", borderRadius: "12px" }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", marginRight: "6px", verticalAlign: "middle" }}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>Resting
-            </button>
+              Coping Center →
+            </Link>
           </div>
         </div>
       </div>
@@ -556,6 +769,16 @@ export default function ChatbotPage() {
           0% { transform: scale(1); }
           50% { transform: scale(1.08); box-shadow: 0 0 14px rgba(192, 118, 90, 0.5); }
           100% { transform: scale(1); }
+        }
+
+        .checklist-item-hover {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .checklist-item-hover:hover {
+          background-color: rgba(255, 255, 255, 0.04) !important;
+          border-color: var(--color-primary-light, rgba(169, 146, 196, 0.3)) !important;
+          transform: translateY(-1px);
         }
 
         .typing-dot {

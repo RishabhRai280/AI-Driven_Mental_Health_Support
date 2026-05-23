@@ -14,6 +14,11 @@ export default function JournalingPage() {
   const [saveStatus, setSaveStatus] = useState("Draft");
   const currentJournalId = useRef<string | null>(null);
 
+  // LLaMA dynamic reflection insight states
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [aiCopingStrategies, setAiCopingStrategies] = useState<string[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false);
 
@@ -71,26 +76,39 @@ export default function JournalingPage() {
 
       // Autosave to DB as a draft (create new or update existing)
       try {
+        setIsAnalyzing(true);
+        let res;
         if (currentJournalId.current) {
-          await api.put(`/api/journals/${currentJournalId.current}`, {
-            title: title || "Untitled Reflection",
-            body: content,
-            sentiment: detectedSentiment,
-          });
+          res = await api.put<{ success: boolean; journal: { id: string; summary?: string; copingStrategies?: string[]; mascotPose?: HamsterPose; sentiment?: string } }>(
+            `/api/journals/${currentJournalId.current}`,
+            {
+              title: title || "Untitled Reflection",
+              body: content,
+            }
+          );
         } else {
-          const res = await api.post<{ journal: { id: string } }>(
+          res = await api.post<{ journal: { id: string; summary?: string; copingStrategies?: string[]; mascotPose?: HamsterPose; sentiment?: string } }>(
             "/api/journals",
             {
               title: title || "Untitled Reflection",
               body: content,
-              sentiment: detectedSentiment,
-            },
+            }
           );
+        }
+
+        if (res.journal) {
           currentJournalId.current = res.journal.id;
+          if (res.journal.summary) setAiSummary(res.journal.summary);
+          if (res.journal.copingStrategies) setAiCopingStrategies(res.journal.copingStrategies);
+          if (res.journal.mascotPose) setMascotPose(res.journal.mascotPose);
+          if (res.journal.sentiment) setSentiment(res.journal.sentiment as any);
         }
         setSaveStatus("Autosaved successfully");
-      } catch {
+      } catch (err) {
+        console.error("Autosave analysis failed:", err);
         setSaveStatus("Autosave failed");
+      } finally {
+        setIsAnalyzing(false);
       }
     }, 1200);
 
@@ -156,26 +174,38 @@ export default function JournalingPage() {
     }
 
     setSaveStatus("Saving reflection...");
+    setIsAnalyzing(true);
 
     try {
+      let finalJournal;
       if (currentJournalId.current) {
         // Update existing journal
-        await api.put(`/api/journals/${currentJournalId.current}`, {
-          title: title.trim() || "Untitled Reflection",
-          body: content.trim(),
-          sentiment,
-        });
+        const res = await api.put<{ success: boolean; journal: { id: string; summary?: string; copingStrategies?: string[]; mascotPose?: HamsterPose; sentiment?: string } }>(
+          `/api/journals/${currentJournalId.current}`,
+          {
+            title: title.trim() || "Untitled Reflection",
+            body: content.trim(),
+          }
+        );
+        finalJournal = res.journal;
       } else {
         // Create new journal
-        const res = await api.post<{ journal: { id: string } }>(
+        const res = await api.post<{ journal: { id: string; summary?: string; copingStrategies?: string[]; mascotPose?: HamsterPose; sentiment?: string } }>(
           "/api/journals",
           {
             title: title.trim() || "Untitled Reflection",
             body: content.trim() || "No reflection thoughts logged.",
-            sentiment,
-          },
+          }
         );
+        finalJournal = res.journal;
         currentJournalId.current = res.journal.id;
+      }
+
+      if (finalJournal) {
+        if (finalJournal.summary) setAiSummary(finalJournal.summary);
+        if (finalJournal.copingStrategies) setAiCopingStrategies(finalJournal.copingStrategies);
+        if (finalJournal.mascotPose) setMascotPose(finalJournal.mascotPose);
+        if (finalJournal.sentiment) setSentiment(finalJournal.sentiment as any);
       }
 
       // Also add to unified wellness timeline
@@ -184,7 +214,7 @@ export default function JournalingPage() {
         title: title.trim() || "Untitled Reflection",
         preview:
           content.trim().slice(0, 180) || "No reflection thoughts logged.",
-        sentiment,
+        sentiment: finalJournal?.sentiment || sentiment,
         refId: currentJournalId.current,
       });
 
@@ -197,11 +227,15 @@ export default function JournalingPage() {
       // Reset for new entry
       setTitle("");
       setContent("");
+      setAiSummary("");
+      setAiCopingStrategies([]);
       currentJournalId.current = null;
     } catch (err) {
       console.error("Failed to save journal:", err);
       setSaveStatus("Save failed");
       alert("Could not save your journal entry. Please try again.");
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -454,7 +488,7 @@ export default function JournalingPage() {
           </div>
         </div>
 
-        {/* Interactive prompts */}
+        {/* Interactive prompts / LLaMA dynamic CBT insights */}
         <div
           style={{
             marginTop: "12px",
@@ -463,27 +497,94 @@ export default function JournalingPage() {
             borderRadius: "16px",
             padding: "16px",
             textAlign: "left",
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
           }}
         >
-          <h4
-            style={{
-              fontSize: "13px",
-              fontWeight: "600",
-              color: "var(--color-primary)",
-              marginBottom: "6px",
-            }}
-          >
-            Coping Spark Prompt
-          </h4>
-          <p
-            style={{
-              fontSize: "13px",
-              lineHeight: "1.5",
-              color: "var(--text-primary)",
-            }}
-          >
-            {journalingPrompts[sentiment]}
-          </p>
+          {isAnalyzing && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center", padding: "4px 0" }}>
+              <div className="typing-dot" />
+              <div className="typing-dot" style={{ animationDelay: "0.2s" }} />
+              <div className="typing-dot" style={{ animationDelay: "0.4s" }} />
+              <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Analyzing with LLaMA...</span>
+            </div>
+          )}
+
+          {aiSummary ? (
+            <div>
+              <h4
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  color: "var(--color-primary)",
+                  marginBottom: "4px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px"
+                }}
+              >
+                CBT Reflection Summary
+              </h4>
+              <p
+                style={{
+                  fontSize: "13px",
+                  lineHeight: "1.5",
+                  color: "var(--text-primary)",
+                  fontStyle: "italic",
+                }}
+              >
+                "{aiSummary}"
+              </p>
+            </div>
+          ) : (
+            <div>
+              <h4
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "var(--color-primary)",
+                  marginBottom: "6px",
+                }}
+              >
+                Coping Spark Prompt
+              </h4>
+              <p
+                style={{
+                  fontSize: "13px",
+                  lineHeight: "1.5",
+                  color: "var(--text-primary)",
+                }}
+              >
+                {journalingPrompts[sentiment]}
+              </p>
+            </div>
+          )}
+
+          {aiCopingStrategies.length > 0 && (
+            <div style={{ marginTop: "4px", borderTop: "1px solid var(--border-light)", paddingTop: "12px" }}>
+              <h4
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  color: "var(--color-secondary)",
+                  marginBottom: "8px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px"
+                }}
+              >
+                Recommended Self-Care Checklist
+              </h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {aiCopingStrategies.map((strategy, idx) => (
+                  <label key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "13px", cursor: "pointer", color: "var(--text-primary)" }}>
+                    <input type="checkbox" style={{ marginTop: "3px" }} />
+                    <span>{strategy}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
