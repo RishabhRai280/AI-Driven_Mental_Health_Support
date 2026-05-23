@@ -235,7 +235,6 @@ export default function RegisterPage() {
                 <Mascot
                   pose="waving-hello"
                   size={130}
-                  dialogue="Welcome! I'm Sparky, and I can't wait to walk this path of calm together with you."
                   interactive={true}
                 />
               </div>

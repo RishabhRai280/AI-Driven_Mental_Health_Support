@@ -221,7 +221,6 @@ export default function LoginPage() {
                 <Mascot
                   pose="shy-peeking"
                   size={130}
-                  dialogue="Pssst... your secret journals and entries are 100% private and safe here."
                   interactive={true}
                 />
               </div>

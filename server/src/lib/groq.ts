@@ -256,7 +256,7 @@ async function callGroqAPI(systemPrompt: string, userMessage: string, forceJson:
       throw new Error(`Groq API returned error HTTP ${response.status}: ${text}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     return data.choices[0]?.message?.content || "";
   } catch (err) {
     console.error("Failed to connect with Groq server:", err);

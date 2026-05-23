@@ -2005,7 +2005,7 @@ export default function DashboardPage() {
         /* Evolved Mascot Companion Card */
         .mascot-hero-card {
           position: relative;
-          overflow: hidden;
+          overflow: visible;
           background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(91, 127, 166, 0.08) 100%) !important;
           display: grid;
           grid-template-columns: 1fr auto;

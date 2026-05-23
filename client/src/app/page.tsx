@@ -440,9 +440,9 @@ export default function LandingPage() {
                 <line x1="0" y1="120" x2="800" y2="120" stroke="var(--border-light)" strokeWidth="1" strokeDasharray="4 4" />
                 <line x1="0" y1="200" x2="800" y2="200" stroke="var(--border-light)" strokeWidth="1" strokeDasharray="4 4" />
 
-                {/* Resilience curve line */}
+                 {/* Resilience curve line */}
                 <path
-                  d="M 50 160 Q 150 180 250 100 T 450 120 T 650 60 T 750 80"
+                  d="M 50 160 C 120 160, 180 100, 250 100 C 320 100, 380 120, 450 120 C 520 120, 580 60, 650 60 C 690 60, 720 80, 750 80"
                   fill="none"
                   stroke="var(--color-primary)"
                   strokeWidth="4"
@@ -451,7 +451,7 @@ export default function LandingPage() {
                 
                 {/* Glowing glow filters */}
                 <path
-                  d="M 50 160 Q 150 180 250 100 T 450 120 T 650 60 T 750 80"
+                  d="M 50 160 C 120 160, 180 100, 250 100 C 320 100, 380 120, 450 120 C 520 120, 580 60, 650 60 C 690 60, 720 80, 750 80"
                   fill="none"
                   stroke="var(--color-primary)"
                   strokeWidth="8"
@@ -809,10 +809,11 @@ export default function LandingPage() {
           align-items: center;
           position: relative;
           box-shadow: var(--shadow-hover);
-          overflow: hidden;
+          overflow: visible;
           width: 100%;
           max-width: 380px;
         }
+
         .mascot-card-aura {
           position: absolute;
           top: 0;
