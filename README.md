@@ -1,108 +1,419 @@
-# 🥚 SereneMind — AI-Driven Mental Health Support Ecosystem
+<div align="center">
 
-> **Empowering mental wellness through secure, real-time AI companionship, Cognitive Behavioral Therapy (CBT) reflection, and evidence-based self-care pacers.**
->
-> *Developed for the 2026 AI Mental Health Hackathon.*
+# SereneMind 🧠
 
----
+### AI-Driven Mental Health Companion
 
-## 🌟 Executive Summary & Vision
+SereneMind provides a safe, comforting, and judgment-free space with an interactive AI chatbot, dynamic wellness tracking, journaling with sentiment analysis, and guided self-care exercises.
 
-**SereneMind** is a state-of-the-art mental health support application designed to bridge the gap between weekly therapist sessions and daily emotional struggles. By integrating Cognitive Behavioral Therapy (CBT) frameworks, Dialectical Behavior Therapy (DBT) exercises, and advanced sentiment analysis, SereneMind helps users understand their emotional patterns, self-regulate, and build emotional resilience in a secure environment.
+<br />
 
-> [!IMPORTANT]
-> **SereneMind is NOT a clinical tool or a replacement for professional medical treatment.** It is a supportive wellness companion designed to prevent emotional escalation and empower personal reflection.
+**Project Leader: Rishabh Rai**
 
----
+[![GitHub](https://img.shields.io/badge/GitHub-Rishabh-black?style=flat&logo=github)](https://github.com/RishabhRai280) · [![LinkedIn](https://img.shields.io/badge/LinkedIn-Rishabh-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/rishabh-rai280/)
 
-## 🚀 Core Features
-
-### 1. 🤖 Empathetic Mascot Companion (Sparky)
-*   Interact with **Sparky**, a personalized wellness companion whose level, traits, and poses (e.g., WAVE, MEDITATE, CELEBRATE) evolve based on your self-care progress.
-*   Chat using Cognitive Behavioral Therapy frameworks to work through stressful scenarios.
-
-### 2. 📝 Reflective Journaling Space
-*   Write free-form reflections with auto-saving.
-*   Receive real-time **AI Sentiment Detection** (e.g., Positive, Anxious, Stressed, Mixed) and personalized CBT-based coping suggestions.
-
-### 3. 🎙️ Continuous Real-Time Voice Dictation
-*   Dictate thoughts and reflections hands-free! 
-*   Uses the Web Speech API configured for **continuous, real-time transcription** (using `interimResults` to render text instantly as you speak, appending proper punctuation and sentences automatically). The recording only stops when you click to stop.
-
-### 4. 📊 Deep-Dive Mood Analytics
-*   **Resilience & Mood Trend Chart**: A self-drawing Bezier curve line chart illustrating your weekly mood progress.
-*   **Daily Mood Dynamics Heatmap**: An interactive monthly calendar grid mapping daily mood scores.
-*   **Correlation & Lifestyle Factors**: Analytics correlating Screen Time, Sleep, Water Intake, and Physical Activity against your emotional baseline.
-
-### 5. 🗂️ Wellness Timeline & Archive
-*   A centralized timeline logging your daily exercises, journals, check-ins, and chats.
-*   **Expandable Chat Transcripts**: Review past conversations instantly. Includes an automatic filter that screens out greeting spam, keeping your transcripts focused strictly on your actual reflections.
-*   **Generative AI Summaries**: Request monthly or yearly summaries of your emotional logs.
-
-### 6. 🚨 Clinical Safety & Crisis SOS System (The Sentinel)
-*   **Real-time Classification**: Every message is scanned for severe clinical danger triggers (e.g., suicide, self-harm, eating disorders).
-*   **Instant Intercept**: If a trigger is detected, standard AI replies are instantly halted, and the UI transitions to a dedicated, calming **Crisis SOS panel** displaying local emergency help resources (988 helpline, text line, geo-based numbers).
+</div>
 
 ---
 
-## 📐 System Architecture & Data Flow
+> **Note:** This is a full-stack Next.js and Express project integrating LLaMA 3.1 for intelligent therapeutic conversations.
 
-Every prompt sent to the LLM is pre-evaluated by the backend for security and contextual alignment.
+---
 
-```mermaid
-graph TD
-    UserInput[User Inputs Chat or Journal Text] --> SafetyScan{Real-Time Safety Classifier}
-    SafetyScan -- Danger Intent Detected --> SOSRedirect[Redirect to Calming SOS UI Panel & Halt LLM]
-    SafetyScan -- Clear / Safe --> ContextEngine[Context Compiler: Sleep, Stress, Mascot Profile]
-    ContextEngine --> LLMPrompt[Construct System Prompt with CBT/DBT Directives]
-    LLMPrompt --> LLaMAResponse[LLaMA API Call via Groq]
-    LLaMAResponse --> CompanionAction[Update Mascot Pose + Empathy Reply]
-    CompanionAction --> RenderUI[Update Client UI Real-Time]
+## 👥 Developers
+
+<div align="center">
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <h3>Rishabh Rai</h3>
+      <p><b>Project Leader & Developer</b></p>
+      <p>Architected the SereneMind platform, backend APIs, and integrated LLaMA 3.1 AI capabilities.</p>
+      <br />
+      <a href="https://github.com/RishabhRai280" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub-RishabhRai280-black?style=for-the-badge&logo=github" alt="GitHub" />
+      </a>
+      <br />
+      <a href="https://www.linkedin.com/in/rishabh-rai280/" target="_blank">
+        <img src="https://img.shields.io/badge/LinkedIn-Rishabh%20Rai-blue?style=for-the-badge&logo=linkedin" alt="LinkedIn" />
+      </a>
+    </td>
+    <td width="50%" align="center">
+      <h3>Ranjeet Choudhary</h3>
+      <p><b>Full-Stack Developer</b></p>
+      <p>Contributed to core application development and full-stack integration.</p>
+      <br />
+      <a href="https://github.com/Chran19" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub-Chran19-black?style=for-the-badge&logo=github" alt="GitHub" />
+      </a>
+      <br />
+      <a href="https://www.linkedin.com/in/ranjeet-choudhary-39a684290/" target="_blank">
+        <img src="https://img.shields.io/badge/LinkedIn-Ranjeet%20Choudhary-blue?style=for-the-badge&logo=linkedin" alt="LinkedIn" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <h3>Aman Bansod</h3>
+      <p><b>Developer</b></p>
+      <p>Contributed to application development and project integration.</p>
+      <br />
+      <a href="https://github.com/" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub-Aman%20Bansod-black?style=for-the-badge&logo=github" alt="GitHub" />
+      </a>
+      <br />
+      <a href="https://www.linkedin.com/" target="_blank">
+        <img src="https://img.shields.io/badge/LinkedIn-Aman%20Bansod-blue?style=for-the-badge&logo=linkedin" alt="LinkedIn" />
+      </a>
+    </td>
+    <td width="50%" align="center">
+      <h3>Sanika Jadhav</h3>
+      <p><b>Developer</b></p>
+      <p>Contributed to application development and project integration.</p>
+      <br />
+      <a href="https://github.com/" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub-Sanika%20Jadhav-black?style=for-the-badge&logo=github" alt="GitHub" />
+      </a>
+      <br />
+      <a href="https://www.linkedin.com/" target="_blank">
+        <img src="https://img.shields.io/badge/LinkedIn-Sanika%20Jadhav-blue?style=for-the-badge&logo=linkedin" alt="LinkedIn" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <h3>Bhargavi Potode</h3>
+      <p><b>Developer</b></p>
+      <p>Contributed to application development and project integration.</p>
+      <br />
+      <a href="https://github.com/" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub-Bhargavi%20Potode-black?style=for-the-badge&logo=github" alt="GitHub" />
+      </a>
+      <br />
+      <a href="https://www.linkedin.com/" target="_blank">
+        <img src="https://img.shields.io/badge/LinkedIn-Bhargavi%20Potode-blue?style=for-the-badge&logo=linkedin" alt="LinkedIn" />
+      </a>
+    </td>
+    <td width="50%" align="center">
+      <h3>Shreyash Khumbhar</h3>
+      <p><b>Developer</b></p>
+      <p>Contributed to application development and project integration.</p>
+      <br />
+      <a href="https://github.com/" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub-Shreyash%20Khumbhar-black?style=for-the-badge&logo=github" alt="GitHub" />
+      </a>
+      <br />
+      <a href="https://www.linkedin.com/" target="_blank">
+        <img src="https://img.shields.io/badge/LinkedIn-Shreyash%20Khumbhar-blue?style=for-the-badge&logo=linkedin" alt="LinkedIn" />
+      </a>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+---
+
+## Overview
+
+SereneMind addresses the growing need for accessible, immediate mental health support. Designed for students, professionals, and anyone experiencing stress or burnout, it offers a personalized companion that understands emotional states and provides grounded, CBT-inspired coping strategies. Users can chat with their virtual companion, log their moods, write reflections, and monitor their progress over time.
+
+### MITAOE Hackathon & Problem Statement
+**Built for a college-level hackathon at MITAOE.**
+
+**Problem Statement:** *To bridge the gap between human therapy sessions and daily emotional struggles by providing a 24/7 empathetic conversational companion, intelligent mood analytics, and evidence-based self-care tools.*
+
+<br />
+
+![Homepage](./SnapRoutes/f1/home%20(1).png)
+
+<p align="center"><i>SereneMind Platform Homepage</i></p>
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Screenshots](#screenshots)
+- [Technology Stack](#technology-stack)
+- [Architecture](#architecture)
+- [Getting Started](#getting-started)
+- [API Reference](#api-reference)
+
+---
+
+## Key Features
+
+### AI Companion Chatbot
+
+| Feature | Description |
+|---------|-------------|
+| Empathetic Dialogue | AI companion detects emotional states and provides warm responses |
+| Crisis Detection | Detects severe distress signals and provides SOS resources |
+| Memory & Context | Remembers recent sessions, exercises, and journal entries |
+
+### Wellness Tracking & Journaling
+
+| Feature | Description |
+|---------|-------------|
+| Sentiment Analysis | Extracts underlying emotions from journals and suggests coping strategies |
+| Mood Heatmap | Visual calendar displaying daily emotional trends |
+| Unified Timeline | History view combining chats, journals, exercises, and mood logs |
+
+### Self-Care & Exercises
+
+| Feature | Description |
+|---------|-------------|
+| Guided Breathing | 4-minute box breathing pacer to reset the autonomic nervous system |
+| Daily Habits | Customizable checklists for hydration, screen-time, and outdoor activity |
+
+---
+
+## Screenshots
+
+### Authentication
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="./SnapRoutes/f1/login%20(1).png" alt="User Login" />
+      <p align="center"><i>User Login</i></p>
+    </td>
+    <td width="50%">
+      <img src="./SnapRoutes/f1/register%20(1).png" alt="User Registration" />
+      <p align="center"><i>User Registration</i></p>
+    </td>
+  </tr>
+</table>
+
+### Core Wellness Features
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="./SnapRoutes/f2/dashboard.png" alt="Dashboard" />
+      <p align="center"><i>Main Dashboard</i></p>
+    </td>
+    <td width="50%">
+      <img src="./SnapRoutes/f2/chatbot.png" alt="AI Chatbot" />
+      <p align="center"><i>Interactive AI Chatbot</i></p>
+    </td>
+  </tr>
+</table>
+
+### Journaling & Exercises
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="./SnapRoutes/f2/journaling.png" alt="Journaling" />
+      <p align="center"><i>Reflective Journaling</i></p>
+    </td>
+    <td width="50%">
+      <img src="./SnapRoutes/f2/exercises.png" alt="Exercises" />
+      <p align="center"><i>Self-Care Exercises</i></p>
+    </td>
+  </tr>
+</table>
+
+### Analysis & History
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="./SnapRoutes/f2/analysis.png" alt="Analysis" />
+      <p align="center"><i>Mood Calendar & Analysis</i></p>
+    </td>
+    <td width="50%">
+      <img src="./SnapRoutes/f2/history.png" alt="History" />
+      <p align="center"><i>Unified History Timeline</i></p>
+    </td>
+  </tr>
+</table>
+
+### Profile & Crisis Support
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="./SnapRoutes/f2/profile.png" alt="Profile" />
+      <p align="center"><i>User Profile</i></p>
+    </td>
+    <td width="50%">
+      <img src="./SnapRoutes/f2/crisis-sos.png" alt="Crisis SOS" />
+      <p align="center"><i>Immediate Crisis SOS</i></p>
+    </td>
+  </tr>
+</table>
+
+---
+
+> **Want to see more?** Clone the application locally and experience the AI companion firsthand.
+
+---
+
+## Technology Stack
+
+### Frontend
+
+| Technology | Purpose |
+|------------|---------|
+| Next.js 16 (React) | Core UI framework and routing |
+| Vanilla CSS | Custom styling and modern aesthetics |
+
+### Backend
+
+| Technology | Purpose |
+|------------|---------|
+| Node.js & Express | Backend server handling API requests |
+| PostgreSQL | Database for storing user profiles and logs |
+| Groq API (LLaMA 3.1) | Inference engine powering the AI companion |
+
+### Services & Utilities
+
+| Technology | Purpose |
+|------------|---------|
+| JWT | Secure authentication and session management |
+| bcryptjs | Password hashing |
+| Docker | Containerized PostgreSQL database |
+
+---
+
+## Architecture
+
+```text
+AI-Driven_Mental_Health_Support/
+│
+├── client/                  # Frontend Next.js Application
+│   ├── public/              # Static assets and icons
+│   └── src/
+│       └── app/             # Next.js App Router structure
+│           ├── (main)/      # Protected dashboard routes
+│           ├── components/  # Reusable UI components
+│           ├── context/     # Global state management
+│           ├── lib/         # API wrappers
+│           ├── login/       # Authentication page
+│           └── register/    # Registration page
+│
+├── server/                  # Backend Node.js/Express Application
+│   ├── migrations/          # PostgreSQL schema scripts
+│   └── src/
+│       ├── lib/             # Groq AI integration
+│       ├── middleware/      # Express middlewares
+│       ├── routes/          # API endpoints
+│       ├── db.ts            # Database connection setup
+│       ├── index.ts         # Backend entry point
+│       └── seed.ts          # Database seed script
+│
+├── docker-compose.yml       # Docker configuration for PostgreSQL
+└── start.sh                 # Shell script to start services
 ```
 
-### Technical Stack
-*   **Frontend**: React (Next.js App Router), Custom HSL Glassmorphism CSS system, Web Speech API.
-*   **Backend**: Node.js, Express, TypeScript.
-*   **Database**: PostgreSQL (handling users, journals, check-ins, and timelines).
-*   **AI Integration**: Groq API hosting high-performance LLaMA models for real-time sentiment analysis, CBT prompts, and monthly summary generation.
-
 ---
 
-## 🛠️ Installation & Local Setup
-
-Get SereneMind up and running in less than 3 minutes using the automated startup scripts.
+## Getting Started
 
 ### Prerequisites
-*   [Node.js](https://nodejs.org/) (v18 or higher)
-*   [PostgreSQL](https://www.postgresql.org/) (v14 or higher)
 
-### 1. Clone & Set Up Server Environment
-1. Clone the repository and navigate to the project directory.
-2. In the `server` directory, create a `.env` file based on `.env.example`:
-   ```bash
-   DATABASE_URL=postgresql://localhost:5432/serenemind
-   JWT_SECRET=your_super_secret_jwt_key
-   PORT=3001
-   NODE_ENV=development
-   GROQ_API_KEY=your_groq_api_key
-   ```
+- **Node.js** (v18+)
+- **PostgreSQL** (or Docker)
+- **Groq API Key**
+- **Git**
 
-### 2. Run the App
-SereneMind includes a unified startup script (`start.sh`) that checks PostgreSQL status, creates the database if it doesn't exist, runs database migrations, and launches both development servers in parallel.
+### Installation
 
-Make the script executable and run it from the root:
+1. **Clone the repository**
+
 ```bash
-chmod +x start.sh
-./start.sh
+git clone https://github.com/RishabhRai280/AI-Driven_Mental_Health_Support.git
+cd AI-Driven_Mental_Health_Support
 ```
 
-### 3. Verification Endpoints
-*   **Next.js Frontend**: [http://localhost:3000](http://localhost:3000)
-*   **Express API Server**: [http://localhost:3001](http://localhost:3001)
-*   **Health Status**: [http://localhost:3001/health](http://localhost:3001/health)
+2. **Install dependencies**
+
+```bash
+cd server
+npm install
+cd ../client
+npm install
+```
+
+3. **Configure environment variables**
+
+Create a `.env` file in the `server` directory:
+
+```properties
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/serenemind
+NODE_ENV=development
+PORT=3001
+JWT_SECRET=your_jwt_secret_key_here
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=llama-3.1-8b-instant
+```
+
+4. **Set up the database**
+
+```bash
+docker-compose up -d
+cd server
+npm run db:seed
+```
+
+5. **Start the application**
+
+```bash
+# Terminal 1 (Backend)
+cd server
+npm run dev
+
+# Terminal 2 (Frontend)
+cd client
+npm run dev
+```
+
+Application runs at `http://localhost:3000`.
 
 ---
 
-## 🛡️ Security, Privacy & Compliance
-*   **HIPAA Principles**: Direct field-level database sanitization to scrub personal identifiers, and strict separation of API credentials.
-*   **User Controls**: Absolute data clearing options on demand. Journals and chats are private to the session and never stored for global training.
+## API Reference
+
+### Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/auth/me` | Fetch authenticated user details |
+| POST | `/api/auth/register` | Register user |
+| POST | `/api/auth/login` | Authenticate user |
+
+### Chats & AI Companion
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/chats` | Retrieve conversation history |
+| POST | `/api/chats` | Save a chat message |
+| POST | `/api/chats/welcome` | Generate AI welcome greeting |
+| POST | `/api/chats/reply` | Send message to AI and receive response |
+| DELETE | `/api/chats/:sessionId` | Delete a chat session |
+
+### Wellness & Journaling
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/journals` | Retrieve past journaling entries |
+| POST | `/api/journals` | Create journal entry and analyze sentiment |
+| GET | `/api/wellness/timeline` | Get unified history |
+| POST | `/api/wellness/mood` | Log a daily mood score |
+
+---
+
+<div align="center">
+
+**Supporting your mental well-being, one conversation at a time.**
+
+---
+
+[Back to Top](#serenemind-)
+
+</div>

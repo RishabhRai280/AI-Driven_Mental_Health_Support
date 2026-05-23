@@ -3,6 +3,8 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 
+const { v4: uuidv4 } = require('uuid');
+
 dotenv.config({ path: path.join(__dirname, '.env') });
 
 const pool = new Pool({
@@ -21,7 +23,8 @@ async function run() {
     console.log("User Registration Date:", new Date(user.created_at).toLocaleDateString());
 
     const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET);
-    const sessionId = "test-session-timeline-" + Math.random().toString().substring(2, 8);
+    // Generate a valid UUIDv4 for PostgreSQL
+    const sessionId = uuidv4();
 
     console.log("\n--- POSTing Welcome Greeting to verify timeline prompt injection ---");
     const welcomeRes = await fetch("http://localhost:3001/api/chats/welcome", {
