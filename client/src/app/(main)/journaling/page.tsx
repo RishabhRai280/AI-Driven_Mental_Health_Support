@@ -21,6 +21,7 @@ export default function JournalingPage() {
 
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false);
+  const startContentRef = useRef("");
 
   // Coping strategies checklist state
   const [checkedStrategies, setCheckedStrategies] = useState<Record<number, boolean>>({});
@@ -139,13 +140,14 @@ export default function JournalingPage() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = "en-US";
 
     recognition.onstart = () => {
       setIsListening(true);
       setMascotPose("thinking-deeply");
+      startContentRef.current = content;
     };
 
     recognition.onend = () => {
@@ -158,12 +160,21 @@ export default function JournalingPage() {
     };
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      if (transcript) {
-        setContent(
-          (prev) => prev + (prev ? " " : "") + transcript.trim() + ".",
-        );
+      let finalTranscript = "";
+      let interimTranscript = "";
+      for (let i = 0; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript.trim() + ". ";
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
       }
+      const sessionText = (finalTranscript + interimTranscript).trim();
+      setContent(
+        startContentRef.current +
+          (startContentRef.current ? " " : "") +
+          sessionText
+      );
     };
 
     (window as any).currentJournalRecognition = recognition;

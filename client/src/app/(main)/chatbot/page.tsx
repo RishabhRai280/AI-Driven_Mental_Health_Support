@@ -29,9 +29,11 @@ export default function ChatbotPage() {
   const [mascotDialogue, setMascotDialogue] = useState("Let's talk! I'm listening.");
   const [isTyping, setIsTyping] = useState(false);
   const [showSafetyBanner, setShowSafetyBanner] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Voice Input State
   const [isListening, setIsListening] = useState(false);
+  const startContentRef = useRef("");
 
   // Companion & Persona state from DB
   const [companionName, setCompanionName] = useState("Sparky");
@@ -87,6 +89,15 @@ export default function ChatbotPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  // Auto-resize textarea as user types
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [inputVal]);
 
   // Load Adopted Mascot Name, computed Persona, and dynamic Welcome greeting on mount
   useEffect(() => {
@@ -183,13 +194,23 @@ export default function ChatbotPage() {
 
   // Safety trigger checker
   const checkSafetyTriggers = (text: string) => {
-    const triggers = ["suicide", "die", "hurt myself", "kill myself", "end my life", "self harm"];
-    const matches = triggers.some((trigger) => text.toLowerCase().includes(trigger));
+    const triggers = [
+      "suicide", "suicidal", "die", "hurt myself", "kill myself", "end my life", "self harm",
+      "dont want to live", "don't want to live", "want to end it", "end it all", "wanna die", 
+      "want to die", "kill me", "wanna end it", "feel suicidal", "want to kill myself"
+    ];
+    const cleanText = text.toLowerCase().replace(/['’]/g, "");
+    const matches = triggers.some((trigger) => {
+      const cleanTrigger = trigger.replace(/['’]/g, "");
+      return cleanText.includes(cleanTrigger);
+    });
     if (matches) {
       setShowSafetyBanner(true);
       setMascotPose("holding-heart");
       setMascotDialogue("Please stay safe. Let me help you reach care immediately.");
+      return true;
     }
+    return false;
   };
 
   // Emotion-reactive mascot logic based on content
@@ -248,14 +269,15 @@ export default function ChatbotPage() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = "en-US";
 
     recognition.onstart = () => {
       setIsListening(true);
       setMascotPose("thinking-deeply");
       setMascotDialogue(`Listening... Speak your mind to ${companionName}!`);
+      startContentRef.current = inputVal;
     };
 
     recognition.onend = () => {
@@ -268,10 +290,21 @@ export default function ChatbotPage() {
     };
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      if (transcript) {
-        setInputVal((prev) => prev + (prev ? " " : "") + transcript.trim());
+      let finalTranscript = "";
+      let interimTranscript = "";
+      for (let i = 0; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript.trim() + " ";
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
       }
+      const sessionText = (finalTranscript + interimTranscript).trim();
+      setInputVal(
+        startContentRef.current +
+          (startContentRef.current ? " " : "") +
+          sessionText
+      );
     };
 
     (window as any).currentChatRecognition = recognition;
@@ -293,7 +326,28 @@ export default function ChatbotPage() {
 
     setMessages((prev) => [...prev, userMsg]);
     setInputVal("");
-    checkSafetyTriggers(userMsgText);
+
+    const isCrisis = checkSafetyTriggers(userMsgText);
+
+    if (isCrisis) {
+      // Create a safety warning message with the isSafetyAlert flag
+      const safetyMsg: ChatMessage = {
+        id: Math.random().toString(),
+        sessionId,
+        sender: "sparky",
+        text: "We hear you, and you don't have to carry this pain alone. Please connect with immediate professional support or a crisis helpline. I am right here, but your safety is our top priority.",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        isSafetyAlert: true,
+      };
+
+      // Save messages in DB
+      api.post("/api/chats", { sessionId, sender: "user", text: userMsgText }).catch(console.error);
+      api.post("/api/chats", { sessionId, sender: "companion", text: safetyMsg.text }).catch(console.error);
+
+      setMessages((prev) => [...prev, safetyMsg]);
+      setIsTyping(false);
+      return;
+    }
 
     // Swap mascot to cognitive head-scratching typing state
     setIsTyping(true);
@@ -365,49 +419,7 @@ export default function ChatbotPage() {
           overflow: "hidden",
         }}
       >
-        {/* Safety Takeover Banner */}
-        {showSafetyBanner && (
-          <div
-            style={{
-              backgroundColor: "rgba(192, 118, 90, 0.08)",
-              borderBottom: "2px solid var(--color-error)",
-              padding: "16px 24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "16px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-error)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <div>
-                <h4 style={{ fontSize: "15px", fontWeight: "600", color: "var(--color-error)" }}>
-                  Distress Safety Takeover Alert
-                </h4>
-                <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-                  Sparky has noticed triggers of deep distress. We want you to be completely safe.
-                </p>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "12px" }}>
-              <Link href="/crisis-sos" className="btn-primary" style={{ backgroundColor: "var(--color-error)", padding: "8px 16px", fontSize: "13px" }}>
-                Access SOS
-              </Link>
-              <button
-                onClick={() => setShowSafetyBanner(false)}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  fontSize: "13px",
-                  color: "var(--text-secondary)",
-                  cursor: "pointer",
-                }}
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Safety banner removed from here and relocated to input bar overlay */}
 
         {/* Conversation Message List Area */}
         <div
@@ -422,6 +434,75 @@ export default function ChatbotPage() {
         >
           {messages.map((msg) => {
             const isUser = msg.sender === "user";
+            const isSafetyAlert = msg.isSafetyAlert || (
+              msg.sender !== "user" && (
+                msg.text.includes("crisis counselor") ||
+                msg.text.includes("immediate professional support") ||
+                msg.text.includes("crisis helpline") ||
+                msg.text.includes("Crisis Support")
+              )
+            );
+
+            if (isSafetyAlert) {
+              return (
+                <div
+                  key={msg.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    width: "100%",
+                    margin: "12px 0",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "100%",
+                      maxWidth: "600px",
+                      padding: "20px 24px",
+                      borderRadius: "20px",
+                      backgroundColor: "rgba(192, 118, 90, 0.1)",
+                      border: "1.5px solid rgba(192, 118, 90, 0.4)",
+                      boxShadow: "0 8px 24px rgba(192, 118, 90, 0.15)",
+                      backdropFilter: "blur(8px)",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      textAlign: "center",
+                      gap: "16px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-error)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                      <h4 style={{ fontSize: "16px", fontWeight: "600", color: "var(--color-error)" }}>Emergency Support & Crisis Resources</h4>
+                    </div>
+                    <p style={{ fontSize: "14px", lineHeight: "1.5", color: "var(--text-primary)" }}>
+                      We care deeply about your safety. If you are experiencing thoughts of suicide or self-harm, please connect with a crisis counselor immediately. You don&apos;t have to go through this alone.
+                    </p>
+                    <div style={{ display: "flex", gap: "12px", width: "100%", justifyContent: "center" }}>
+                      <Link
+                        href="/crisis-sos"
+                        className="btn-primary"
+                        style={{
+                          backgroundColor: "var(--color-error)",
+                          color: "#FFFFFF",
+                          padding: "10px 24px",
+                          borderRadius: "20px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          textDecoration: "none",
+                          border: "none",
+                          boxShadow: "0 4px 12px rgba(192, 118, 90, 0.3)",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        Get Crisis Support Now
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={msg.id}
@@ -491,12 +572,85 @@ export default function ChatbotPage() {
             gap: "12px",
             backgroundColor: "var(--bg-nav)",
             alignItems: "center",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
+          {showSafetyBanner && (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "#C0765A",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "0 24px",
+                gap: "16px",
+                zIndex: 10,
+                animation: "slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <div style={{ color: "#FFFFFF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <h5 style={{ fontSize: "14px", fontWeight: "600", margin: 0 }}>
+                    We hear you, and you are not alone.
+                  </h5>
+                  <p style={{ fontSize: "12px", margin: "2px 0 0 0", opacity: 0.9 }}>
+                    Please let us help you find support right now.
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                <Link 
+                  href="/crisis-sos" 
+                  style={{ 
+                    backgroundColor: "#FFFFFF", 
+                    color: "#C0765A", 
+                    padding: "8px 18px", 
+                    fontSize: "13px", 
+                    fontWeight: "600",
+                    borderRadius: "20px",
+                    border: "none",
+                    cursor: "pointer",
+                    textDecoration: "none",
+                    display: "inline-block",
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)"
+                  }}
+                >
+                  Get Crisis Support
+                </Link>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowSafetyBanner(false);
+                  }}
+                  type="button"
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    fontSize: "13px",
+                    color: "rgba(255, 255, 255, 0.8)",
+                    cursor: "pointer",
+                    fontWeight: "500",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Glowing Microphone voice input */}
           <button
             onClick={toggleVoiceInput}
             type="button"
+            disabled={showSafetyBanner}
             className="btn-secondary voice-chat-btn"
             style={{
               borderRadius: "50%",
@@ -511,6 +665,8 @@ export default function ChatbotPage() {
               color: isListening ? "var(--color-error)" : "var(--color-primary)",
               boxShadow: isListening ? "0 0 14px rgba(192, 118, 90, 0.3)" : "none",
               animation: isListening ? "pulse-mic-chat 1.5s infinite" : "none",
+              opacity: showSafetyBanner ? 0.5 : 1,
+              pointerEvents: showSafetyBanner ? "none" : "auto",
             }}
             title="Dictate message"
           >
@@ -518,11 +674,11 @@ export default function ChatbotPage() {
           </button>
 
           <textarea
+            ref={textareaRef}
             placeholder={isListening ? "Listening... Speak now!" : "Type your feelings... (e.g. 'I feel anxious' or 'stress')"}
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
-            disabled={isListening}
-            rows={Math.min(5, inputVal.split("\n").length || 1)}
+            disabled={isListening || showSafetyBanner}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -543,10 +699,26 @@ export default function ChatbotPage() {
               fontFamily: "var(--font-body)",
               fontSize: "15px",
               lineHeight: "1.5",
-              transition: "all 0.3s ease",
+              transition: "border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease",
             }}
           />
-          <button type="submit" className="btn-primary" style={{ borderRadius: "24px", width: "48px", height: "48px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <button 
+            type="submit" 
+            className="btn-primary" 
+            disabled={showSafetyBanner}
+            style={{ 
+              borderRadius: "24px", 
+              width: "48px", 
+              height: "48px", 
+              padding: 0, 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              flexShrink: 0,
+              opacity: showSafetyBanner ? 0.5 : 1,
+              pointerEvents: showSafetyBanner ? "none" : "auto",
+            }}
+          >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </form>
@@ -765,6 +937,11 @@ export default function ChatbotPage() {
       </div>
 
       <style jsx global>{`
+        @keyframes slide-up {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+
         @keyframes pulse-mic-chat {
           0% { transform: scale(1); }
           50% { transform: scale(1.08); box-shadow: 0 0 14px rgba(192, 118, 90, 0.5); }

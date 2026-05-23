@@ -68,6 +68,7 @@ export default function AnalysisPage() {
 
   // Voice Input State
   const [isListening, setIsListening] = useState(false);
+  const startContentRef = useRef("");
 
   // Active month/year navigation state
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth() + 1);
@@ -210,12 +211,13 @@ export default function AnalysisPage() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = "en-US";
 
     recognition.onstart = () => {
       setIsListening(true);
+      startContentRef.current = dayNoteEdit;
     };
 
     recognition.onend = () => {
@@ -227,12 +229,21 @@ export default function AnalysisPage() {
     };
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      if (transcript) {
-        setDayNoteEdit(
-          (prev) => prev + (prev ? " " : "") + transcript.trim() + ".",
-        );
+      let finalTranscript = "";
+      let interimTranscript = "";
+      for (let i = 0; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript.trim() + ". ";
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
       }
+      const sessionText = (finalTranscript + interimTranscript).trim();
+      setDayNoteEdit(
+        startContentRef.current +
+          (startContentRef.current ? " " : "") +
+          sessionText
+      );
     };
 
     (window as any).currentAnalysisRecognition = recognition;

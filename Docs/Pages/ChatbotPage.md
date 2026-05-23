@@ -92,9 +92,10 @@ This wireframe details the visual layout, interaction rules, and style parameter
 ---
 
 ### C. Bottom Input Panel
-* **Container Wrapper**: `height: 88px; padding: 16px 48px; background-color: var(--bg-page); display: flex; align-items: center; gap: 16px; position: sticky; bottom: 0; width: 100%;`.
-* **Text Input Area**:
-  * Style: `flex-grow: 1; height: 48px; padding: 12px 24px; border-radius: 24px; font-size: 15px; font-family: inherit; background-color: var(--bg-surface); transition: border-color 0.2s, box-shadow 0.2s;`.
+* **Container Wrapper**: `height: auto; min-height: 88px; padding: 16px 48px; background-color: var(--bg-page); display: flex; align-items: center; gap: 16px; position: sticky; bottom: 0; width: 100%;`.
+* **Text Input Area (Dynamic Auto-Resizing Textarea)**:
+  * Description: A multi-line textarea that automatically expands its height dynamically as the user types (handling both natural soft wrapping and manual line breaks), up to a max-height of `150px` after which a vertical scrollbar appears.
+  * Style: `flex-grow: 1; min-height: 48px; max-height: 150px; height: auto; padding: 12px 24px; border-radius: 16px; font-size: 15px; font-family: inherit; background-color: var(--bg-surface); resize: none; transition: border-color 0.2s, box-shadow 0.2s;`.
   * Light Mode Border: `1.5px solid var(--color-secondary) (#7DAA8F)`.
   * Dark Mode Border: `1.5px solid #3A3F48`.
   * Focus State: `outline: none; border-color: var(--color-primary) (#5B7FA6); box-shadow: 0 0 0 3px rgba(91, 127, 166, 0.15);`.

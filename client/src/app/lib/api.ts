@@ -63,6 +63,7 @@ export interface WellnessLog {
   preview: string;
   sentiment: string;
   date: string;
+  refId?: string;
 }
 
 export interface MascotData {
@@ -96,6 +97,7 @@ export interface ChatMessage {
   sender: "user" | "sparky";
   text: string;
   timestamp: string;
+  isSafetyAlert?: boolean;
 }
 
 export interface Journal {

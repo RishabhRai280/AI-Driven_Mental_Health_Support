@@ -10,7 +10,7 @@ router.get("/", requireAuth, async (req: AuthRequest, res: Response): Promise<vo
   const userId = req.user!.id;
   try {
     const result = await pool.query(
-      `SELECT id, type, title, preview, sentiment, created_at
+      `SELECT id, type, title, preview, sentiment, ref_id, created_at
        FROM wellness_logs
        WHERE user_id = $1
        ORDER BY created_at DESC
@@ -24,6 +24,7 @@ router.get("/", requireAuth, async (req: AuthRequest, res: Response): Promise<vo
       title: row.title,
       preview: row.preview,
       sentiment: row.sentiment,
+      refId: row.ref_id,
       date: formatDate(row.created_at),
     }));
 

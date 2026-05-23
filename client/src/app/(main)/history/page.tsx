@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Mascot from "../../components/Mascot";
 import { api, WellnessLog } from "../../lib/api";
 
@@ -11,6 +11,7 @@ interface LogItem {
   preview: string;
   date: string;
   sentiment?: string;
+  refId?: string;
 }
 
 export default function HistoryPage() {
@@ -21,6 +22,9 @@ export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [expandedChatId, setExpandedChatId] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [loadingChat, setLoadingChat] = useState(false);
 
   // Form State for Adding new check-in
   const [showAddForm, setShowAddForm] = useState(false);
@@ -33,6 +37,7 @@ export default function HistoryPage() {
 
   // Voice Input State
   const [isListening, setIsListening] = useState(false);
+  const startContentRef = useRef("");
 
   // Fetch wellness logs from DB on mount
   useEffect(() => {
@@ -69,12 +74,13 @@ export default function HistoryPage() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = "en-US";
 
     recognition.onstart = () => {
       setIsListening(true);
+      startContentRef.current = formPreview;
     };
 
     recognition.onend = () => {
@@ -86,12 +92,21 @@ export default function HistoryPage() {
     };
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      if (transcript) {
-        setFormPreview(
-          (prev) => prev + (prev ? " " : "") + transcript.trim() + ".",
-        );
+      let finalTranscript = "";
+      let interimTranscript = "";
+      for (let i = 0; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript.trim() + ". ";
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
       }
+      const sessionText = (finalTranscript + interimTranscript).trim();
+      setFormPreview(
+        startContentRef.current +
+          (startContentRef.current ? " " : "") +
+          sessionText
+      );
     };
 
     (window as any).currentHistoryRecognition = recognition;
@@ -127,10 +142,39 @@ export default function HistoryPage() {
       try {
         await api.delete(`/api/wellness/${id}`);
         setLogs((prev) => prev.filter((log) => log.id !== id));
+        if (expandedChatId === id) {
+          setExpandedChatId(null);
+          setChatMessages([]);
+        }
       } catch (err) {
         console.error("Failed to delete log:", err);
         alert("Could not delete this entry.");
       }
+    }
+  };
+
+  const handleExpandChat = async (logId: string, refId?: string) => {
+    if (expandedChatId === logId) {
+      setExpandedChatId(null);
+      setChatMessages([]);
+      return;
+    }
+
+    if (!refId) return;
+
+    setExpandedChatId(logId);
+    setLoadingChat(true);
+    setChatMessages([]);
+
+    try {
+      // Fetch conversation transcript for this session id
+      const data = await api.get<{ messages: any[] }>(`/api/chats?sessionId=${refId}`);
+      setChatMessages(data.messages);
+    } catch (err) {
+      console.error("Failed to load chat messages:", err);
+      setChatMessages([]);
+    } finally {
+      setLoadingChat(false);
     }
   };
 
@@ -828,10 +872,12 @@ export default function HistoryPage() {
               else if (log.type === "exercise")
                 typeBorderColor = "var(--color-accent)";
 
+              const isChatExp = log.type === "chat" && log.refId;
               return (
                 <div
                   key={log.id}
-                  className="glass-card history-item-card"
+                  className={`glass-card history-item-card ${isChatExp ? "interactive-chat-card" : ""}`}
+                  onClick={() => isChatExp && handleExpandChat(log.id, log.refId)}
                   style={{
                     display: "flex",
                     gap: "18px",
@@ -839,6 +885,7 @@ export default function HistoryPage() {
                     transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                     borderLeft: `4px solid ${typeBorderColor}`,
                     position: "relative",
+                    cursor: isChatExp ? "pointer" : "default",
                   }}
                 >
                   {getIcon(log.type)}
@@ -859,15 +906,37 @@ export default function HistoryPage() {
                         gap: "8px",
                       }}
                     >
-                      <h4
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: "var(--text-primary)",
-                        }}
-                      >
-                        {log.title}
-                      </h4>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <h4
+                          style={{
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            color: "var(--text-primary)",
+                          }}
+                        >
+                          {log.title}
+                        </h4>
+                        {log.type === "chat" && log.refId && (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: "600",
+                              color: "var(--color-primary)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              backgroundColor: "rgba(91, 127, 166, 0.06)",
+                              padding: "4px 8px",
+                              borderRadius: "8px",
+                              marginLeft: "10px",
+                              transition: "all 0.2s ease",
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: expandedChatId === log.id ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}><polyline points="6 9 12 15 18 9"/></svg>
+                            {expandedChatId === log.id ? "Hide Transcript" : "View Transcript"}
+                          </span>
+                        )}
+                      </div>
                       <span
                         style={{
                           fontSize: "12px",
@@ -908,7 +977,10 @@ export default function HistoryPage() {
                           alignItems: "center",
                           gap: "4px",
                         }}
-                        onClick={() => handleDeleteLog(log.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteLog(log.id);
+                        }}
                         className="delete-log-action"
                       >
                         <svg
@@ -930,6 +1002,106 @@ export default function HistoryPage() {
                         Remove
                       </button>
                     </div>
+
+                    {expandedChatId === log.id && (
+                      <div
+                        style={{
+                          marginTop: "16px",
+                          borderTop: "1px solid var(--border-light)",
+                          paddingTop: "16px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "12px",
+                          animation: "fadeIn 0.25s ease-out",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <h5 style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.5px", margin: 0 }}>
+                          Conversation Transcript
+                        </h5>
+                        
+                        {loadingChat ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 0", color: "var(--text-secondary)", fontSize: "13px" }}>
+                            <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                            Loading messages...
+                          </div>
+                        ) : chatMessages.length === 0 ? (
+                          <div style={{ padding: "12px 0", color: "var(--text-secondary)", fontSize: "13px", fontStyle: "italic" }}>
+                            No messages found in this chat session.
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "10px",
+                              maxHeight: "300px",
+                              overflowY: "auto",
+                              paddingRight: "6px",
+                            }}
+                          >
+                            {chatMessages
+                              .filter((msg, idx) => {
+                                // Filter out initial welcome greetings from the companion
+                                if (idx === 0 && msg.sender !== "user") {
+                                  const text = (msg.text || "").toLowerCase();
+                                  if (
+                                    text.includes("wonderful to see you") ||
+                                    text.includes("welcome") ||
+                                    text.includes("how have you been") ||
+                                    text.includes("happy to connect") ||
+                                    text.includes("happy to see you") ||
+                                    text.includes("since we last")
+                                  ) {
+                                    return false;
+                                  }
+                                }
+                                return true;
+                              })
+                              .map((msg, idx) => {
+                                const isUser = msg.sender === "user";
+                              return (
+                                <div
+                                  key={msg.id || idx}
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: isUser ? "flex-end" : "flex-start",
+                                    width: "100%",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      maxWidth: "85%",
+                                      padding: "10px 14px",
+                                      borderRadius: isUser ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                                      backgroundColor: isUser ? "var(--bg-user-bubble)" : "var(--bg-surface)",
+                                      border: isUser ? "none" : "1px solid var(--border-light)",
+                                      boxShadow: "var(--shadow-subtle)",
+                                      borderLeft: isUser ? "none" : "2.5px solid var(--color-secondary)",
+                                    }}
+                                  >
+                                    <p style={{ fontSize: "13px", lineHeight: "1.45", color: "var(--text-primary)", margin: 0 }}>
+                                      {msg.text}
+                                    </p>
+                                    <span
+                                      style={{
+                                        display: "block",
+                                        fontSize: "10px",
+                                        color: "var(--text-secondary)",
+                                        marginTop: "4px",
+                                        textAlign: isUser ? "right" : "left",
+                                      }}
+                                    >
+                                      {msg.timestamp || (msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "")}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               );

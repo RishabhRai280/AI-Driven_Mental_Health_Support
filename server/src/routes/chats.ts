@@ -216,11 +216,28 @@ router.post("/reply", requireAuth, async (req: AuthRequest, res: Response): Prom
       detectedSentiment = "Calm";
     }
     
-    await pool.query(
-      `INSERT INTO wellness_logs (user_id, type, title, preview, sentiment)
-       VALUES ($1, 'chat', $2, $3, $4)`,
-      [userId, `Companion chat with ${mascotName}`, `Vent details: "${text.length > 80 ? text.slice(0, 80) + '...' : text}"`, detectedSentiment]
+    // Check if a chat wellness log already exists for this session
+    const existingLogRes = await pool.query(
+      `SELECT id FROM wellness_logs 
+       WHERE user_id = $1 AND type = 'chat' AND ref_id = $2`,
+      [userId, sessionId]
     );
+
+    if (existingLogRes.rows.length > 0) {
+      const logId = existingLogRes.rows[0].id;
+      await pool.query(
+        `UPDATE wellness_logs 
+         SET preview = $1, sentiment = $2, created_at = NOW() 
+         WHERE id = $3`,
+        [`Vent details: "${text.length > 80 ? text.slice(0, 80) + '...' : text}"`, detectedSentiment, logId]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO wellness_logs (user_id, type, title, preview, sentiment, ref_id)
+         VALUES ($1, 'chat', $2, $3, $4, $5)`,
+        [userId, `Companion chat with ${mascotName}`, `Vent details: "${text.length > 80 ? text.slice(0, 80) + '...' : text}"`, detectedSentiment, sessionId]
+      );
+    }
 
     // 4. Generate AI companion reply and pose using Groq LLaMA prompt
     const { reply, pose } = await generateChatReply(userId, text, sessionId);

@@ -793,7 +793,7 @@ export default function ExercisePage() {
 
       {/* Stateful Daily Habits Checklist */}
       <section
-        className="glass-card"
+        className="glass-card habits-section"
         style={{
           padding: "28px",
           display: "grid",
@@ -1374,85 +1374,175 @@ export default function ExercisePage() {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "flex-start",
-            gap: "24px",
+            gap: "28px",
             borderLeft: "1px solid var(--border-light)",
             paddingLeft: "32px",
+            width: "100%",
           }}
         >
           {/* Active Companion Reactive Card */}
           <div
             className="glass-card"
             style={{
-              padding: "18px",
+              padding: "24px 20px",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: "10px",
+              gap: "14px",
               width: "100%",
               minWidth: "210px",
               border: "1.5px solid var(--border-light)",
               background: "rgba(255,255,255,0.02)",
-              borderRadius: "20px",
+              borderRadius: "24px",
               boxShadow: "var(--shadow-subtle)",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
-            <Mascot pose={companionPose} size={110} interactive={true} />
+            {/* Ambient background glow for mascot */}
+            <div
+              style={{
+                position: "absolute",
+                top: "40px",
+                width: "150px",
+                height: "150px",
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(169, 146, 196, 0.15) 0%, transparent 70%)",
+                zIndex: 0,
+                pointerEvents: "none",
+              }}
+            />
+            
+            <div style={{ zIndex: 1, position: "relative" }}>
+              <Mascot pose={companionPose} size={170} interactive={true} />
+            </div>
+
             <span
               style={{
-                fontSize: "12px",
+                fontSize: "13px",
                 fontWeight: "800",
                 color: "var(--color-primary)",
                 textTransform: "uppercase",
-                letterSpacing: "1px",
+                letterSpacing: "1.5px",
+                zIndex: 1,
               }}
             >
               {adoptedMascotName}
             </span>
+
+            {/* Permanent Dialogue bubble directly inside card */}
+            <div
+              style={{
+                marginTop: "6px",
+                padding: "10px 14px",
+                borderRadius: "14px",
+                backgroundColor: "var(--bg-nav)",
+                border: "1px solid var(--border-light)",
+                fontSize: "12px",
+                color: "var(--text-secondary)",
+                lineHeight: "1.4",
+                textAlign: "center",
+                position: "relative",
+                width: "100%",
+                zIndex: 1,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-6px",
+                  left: "50%",
+                  transform: "translateX(-50%) rotate(45deg)",
+                  width: "10px",
+                  height: "10px",
+                  backgroundColor: "var(--bg-nav)",
+                  borderLeft: "1px solid var(--border-light)",
+                  borderTop: "1px solid var(--border-light)",
+                }}
+              />
+              <span style={{ fontStyle: "italic" }}>&ldquo;{companionDialogue}&rdquo;</span>
+            </div>
           </div>
 
+          {/* Premium Glowing Progress Circle */}
           <div
             style={{
               position: "relative",
-              width: "140px",
-              height: "140px",
+              width: "160px",
+              height: "160px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              marginTop: "8px",
             }}
           >
             <svg
-              width="140"
-              height="140"
+              width="160"
+              height="160"
               viewBox="0 0 160 160"
               style={{ transform: "rotate(-90deg)" }}
             >
+              <defs>
+                <linearGradient id="radialProgressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="var(--color-primary)" />
+                  <stop offset="100%" stopColor="var(--color-accent)" />
+                </linearGradient>
+                <filter id="progressGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              {/* Back Track Circle */}
               <circle
                 cx="80"
                 cy="80"
-                r="70"
+                r="66"
                 fill="transparent"
                 stroke="var(--border-light)"
                 strokeWidth="10"
+                opacity="0.4"
               />
+              {/* Outer Glow Progress Circle */}
               <circle
                 cx="80"
                 cy="80"
-                r="70"
+                r="66"
                 fill="transparent"
-                stroke="var(--color-primary)"
+                stroke="url(#radialProgressGrad)"
                 strokeWidth="10"
-                strokeDasharray={440}
-                strokeDashoffset={440 - (440 * habitProgress) / 100}
+                strokeDasharray={414.69}
+                strokeDashoffset={414.69 - (414.69 * habitProgress) / 100}
                 strokeLinecap="round"
-                style={{ transition: "stroke-dashoffset 0.4s ease" }}
+                opacity="0.3"
+                filter="url(#progressGlow)"
+                style={{ transition: "stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }}
+              />
+              {/* Main Progress Circle */}
+              <circle
+                cx="80"
+                cy="80"
+                r="66"
+                fill="transparent"
+                stroke="url(#radialProgressGrad)"
+                strokeWidth="10"
+                strokeDasharray={414.69}
+                strokeDashoffset={414.69 - (414.69 * habitProgress) / 100}
+                strokeLinecap="round"
+                style={{ transition: "stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }}
               />
             </svg>
             <div style={{ position: "absolute", textAlign: "center" }}>
               <span
                 style={{
-                  fontSize: "24px",
-                  fontWeight: "700",
+                  fontSize: "28px",
+                  fontWeight: "800",
                   display: "block",
+                  color: "var(--text-primary)",
+                  fontFamily: "var(--font-header)",
+                  letterSpacing: "-0.5px",
                 }}
               >
                 {habitProgress}%
@@ -1462,7 +1552,8 @@ export default function ExercisePage() {
                   fontSize: "10px",
                   color: "var(--text-secondary)",
                   textTransform: "uppercase",
-                  letterSpacing: "0.5px",
+                  letterSpacing: "1px",
+                  fontWeight: "600",
                 }}
               >
                 Done Today
@@ -1470,19 +1561,39 @@ export default function ExercisePage() {
             </div>
           </div>
 
-          <div style={{ textAlign: "center" }}>
-            <h4 style={{ fontSize: "14px", fontWeight: "600" }}>
+          <div style={{ textAlign: "center", marginTop: "-4px" }}>
+            <h4 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>
               Milestone Progress
             </h4>
-            <p
-              style={{
-                fontSize: "11px",
-                color: "var(--text-secondary)",
-                marginTop: "4px",
-              }}
-            >
-              {completedHabits.length} of {habits.length} habits locked.
-            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "center", marginTop: "6px" }}>
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: "var(--text-secondary)",
+                }}
+              >
+                {completedHabits.length} of {habits.length} habits locked.
+              </span>
+              {/* Capsule feedback indicator */}
+              <span
+                style={{
+                  display: "inline-block",
+                  padding: "4px 10px",
+                  borderRadius: "12px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  backgroundColor: habitProgress === 100 ? "rgba(90, 148, 117, 0.12)" : "rgba(255, 255, 255, 0.04)",
+                  color: habitProgress === 100 ? "var(--color-success)" : "var(--text-secondary)",
+                  border: habitProgress === 100 ? "1px solid rgba(90, 148, 117, 0.2)" : "1px solid var(--border-light)",
+                  transition: "all 0.3s ease",
+                }}
+              >
+                {habitProgress === 0 && "Let's kickstart wellness! 🌱"}
+                {habitProgress > 0 && habitProgress < 50 && "Off to a solid start! ⚡"}
+                {habitProgress >= 50 && habitProgress < 100 && "Over halfway there! 🔥"}
+                {habitProgress === 100 && "Perfect Day Completed! 🎉"}
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -2258,6 +2369,17 @@ export default function ExercisePage() {
         }
 
         @media (max-width: 900px) {
+          .habits-section {
+            grid-template-columns: 1fr !important;
+            gap: 24px !important;
+          }
+          .habits-section > div:last-child {
+            border-left: none !important;
+            border-top: 1px solid var(--border-light) !important;
+            padding-left: 0 !important;
+            padding-top: 28px !important;
+            width: 100% !important;
+          }
           .exercises-grid {
             grid-template-columns: 1fr !important;
           }

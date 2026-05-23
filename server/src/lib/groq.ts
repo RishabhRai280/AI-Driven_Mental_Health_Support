@@ -105,6 +105,10 @@ export async function getUserContext(userId: string): Promise<UserContext> {
       context.socialContext = p.social_context;
       context.physicalActivity = p.physical_activity;
     }
+    // Sanitize preferred name for dummy/test accounts to prevent awkward AI greetings
+    if (context.preferredName.toLowerCase().includes("dummy")) {
+      context.preferredName = "Friend";
+    }
 
     // 3. Fetch user clinical persona
     const personaRes = await pool.query("SELECT * FROM user_personas WHERE user_id = $1", [userId]);
