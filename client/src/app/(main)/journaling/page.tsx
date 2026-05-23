@@ -22,6 +22,9 @@ export default function JournalingPage() {
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false);
 
+  // Coping strategies checklist state
+  const [checkedStrategies, setCheckedStrategies] = useState<Record<number, boolean>>({});
+
   // Analyze sentiment in real-time + autosave draft to DB
   useEffect(() => {
     if (!content.trim()) {
@@ -575,13 +578,61 @@ export default function JournalingPage() {
               >
                 Recommended Self-Care Checklist
               </h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {aiCopingStrategies.map((strategy, idx) => (
-                  <label key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "13px", cursor: "pointer", color: "var(--text-primary)" }}>
-                    <input type="checkbox" style={{ marginTop: "3px" }} />
-                    <span>{strategy}</span>
-                  </label>
-                ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {aiCopingStrategies.map((strategy, idx) => {
+                  const isChecked = !!checkedStrategies[idx];
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => setCheckedStrategies(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "10px 12px",
+                        borderRadius: "12px",
+                        backgroundColor: isChecked ? "rgba(90, 148, 117, 0.04)" : "rgba(255, 255, 255, 0.01)",
+                        border: isChecked ? "1px solid rgba(90, 148, 117, 0.15)" : "1px solid var(--border-light)",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease"
+                      }}
+                      className="checklist-item-hover"
+                    >
+                      {/* Custom checkbox */}
+                      <div
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          borderRadius: "6px",
+                          border: isChecked ? "2px solid var(--color-success)" : "2px solid var(--border-input)",
+                          backgroundColor: isChecked ? "var(--color-success)" : "transparent",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "all 0.2s ease",
+                          flexShrink: 0
+                        }}
+                      >
+                        {isChecked && (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        )}
+                      </div>
+
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: "500",
+                          color: isChecked ? "var(--text-secondary)" : "var(--text-primary)",
+                          textDecoration: isChecked ? "line-through" : "none",
+                          transition: "all 0.2s ease",
+                          textAlign: "left"
+                        }}
+                      >
+                        {strategy}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -608,6 +659,14 @@ export default function JournalingPage() {
         }
         .journal-textarea:focus {
           box-shadow: none !important;
+        }
+        .checklist-item-hover {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .checklist-item-hover:hover {
+          background-color: rgba(255, 255, 255, 0.04) !important;
+          border-color: rgba(169, 146, 196, 0.3) !important;
+          transform: translateY(-1px);
         }
         @media (max-width: 960px) {
           .journaling-layout {

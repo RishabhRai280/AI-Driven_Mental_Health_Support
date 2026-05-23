@@ -118,7 +118,7 @@ html.dark .glass-card:hover {
 }
 
 /* Interactive Input Fields */
-input, textarea {
+input, textarea, select {
   width: 100%;
   font-family: var(--font-body);
   font-size: 15px;
@@ -131,12 +131,28 @@ input, textarea {
   outline: none;
 }
 
+select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235B7FA6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+html.dark select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23A992C4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+}
+
 input::placeholder, textarea::placeholder {
   color: var(--text-secondary);
   opacity: 0.8;
 }
 
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(91, 127, 166, 0.15);
 }
@@ -385,7 +401,7 @@ input:focus, textarea:focus {
 }
 
 html.dark .ambient-glow {
-  opacity: 0.08;
+  opacity: 0.22;
   mix-blend-mode: screen;
 }
 
@@ -542,6 +558,104 @@ html.dark .breathing-core-node {
 }
 .animate-spin-custom {
   animation: spin 1s linear infinite;
+}
+
+/* Premium Submit Gradient Button & Floating Animated Background Bubbles */
+.btn-premium-gradient {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 36px;
+  border-radius: 9999px;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  color: #FFFFFF;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(91, 127, 166, 0.3);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.5px;
+}
+
+.btn-premium-gradient:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(91, 127, 166, 0.4), 0 0 12px rgba(169, 146, 196, 0.25);
+  opacity: 0.95;
+}
+
+.btn-premium-gradient:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 2px 8px rgba(91, 127, 166, 0.3);
+}
+
+.floating-bubble {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(80px);
+}
+
+.bubble-1 {
+  width: 350px;
+  height: 350px;
+  left: 5%;
+  top: 15%;
+  background: radial-gradient(circle, rgba(91, 127, 166, 0.22) 0%, transparent 80%);
+  animation: floatBubble1 22s infinite alternate ease-in-out;
+}
+
+.bubble-2 {
+  width: 450px;
+  height: 450px;
+  right: 8%;
+  bottom: 8%;
+  background: radial-gradient(circle, rgba(169, 146, 196, 0.22) 0%, transparent 80%);
+  animation: floatBubble2 28s infinite alternate ease-in-out;
+}
+
+.bubble-3 {
+  width: 300px;
+  height: 300px;
+  left: 40%;
+  top: 60%;
+  background: radial-gradient(circle, rgba(125, 170, 143, 0.18) 0%, transparent 80%);
+  animation: floatBubble3 25s infinite alternate ease-in-out;
+}
+
+.bubble-4 {
+  width: 250px;
+  height: 250px;
+  right: 3%;
+  top: 3%;
+  background: radial-gradient(circle, rgba(192, 118, 90, 0.15) 0%, transparent 80%);
+  animation: floatBubble4 20s infinite alternate ease-in-out;
+}
+
+@keyframes floatBubble1 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(60px, -60px) scale(1.15) rotate(180deg); }
+  100% { transform: translate(0, 0) scale(1) rotate(360deg); }
+}
+
+@keyframes floatBubble2 {
+  0% { transform: translate(0, 0) scale(1.1); }
+  50% { transform: translate(-80px, -80px) scale(0.9) ; }
+  100% { transform: translate(0, 0) scale(1.1); }
+}
+
+@keyframes floatBubble3 {
+  0% { transform: translate(0, 0) scale(0.95); }
+  50% { transform: translate(70px, -40px) scale(1.1); }
+  100% { transform: translate(0, 0) scale(0.95); }
+}
+
+@keyframes floatBubble4 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 80px) scale(1.2); }
+  100% { transform: translate(0, 0) scale(1); }
 }
 
 

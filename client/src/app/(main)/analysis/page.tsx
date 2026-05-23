@@ -1314,16 +1314,6 @@ export default function AnalysisPage() {
                 <select
                   value={dayMoodEdit ?? ""}
                   onChange={(e) => setDayMoodEdit(e.target.value as any)}
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    borderRadius: "10px",
-                    border: "1.5px solid var(--border-input)",
-                    backgroundColor: "var(--bg-surface)",
-                    color: "var(--text-primary)",
-                    outline: "none",
-                    fontSize: "13px",
-                  }}
                 >
                   <option value="Calm">Calm (Sage Success)</option>
                   <option value="Energetic">Energetic (Sage Mist)</option>

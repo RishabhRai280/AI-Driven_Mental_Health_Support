@@ -41,15 +41,15 @@ export default function UnboxingParcel({ tapCount, isShaking, onClick }: Unboxin
       <div
         style={{
           position: "absolute",
-          width: "220px",
-          height: "220px",
+          width: "360px",
+          height: "360px",
           borderRadius: "50%",
           background: tapCount >= 5
-            ? "radial-gradient(circle, rgba(169, 146, 196, 0.25) 0%, rgba(255,255,255,0) 70%)"
-            : "radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, rgba(255,255,255,0) 70%)",
+            ? "radial-gradient(circle, rgba(169, 146, 196, 0.3) 0%, rgba(255,255,255,0) 70%)"
+            : "radial-gradient(circle, rgba(212, 175, 55, 0.22) 0%, rgba(255,255,255,0) 70%)",
           zIndex: 1,
           pointerEvents: "none",
-          transform: isShaking ? "scale(1.1)" : "scale(1)",
+          transform: isShaking ? "scale(1.15)" : "scale(1)",
           transition: "all 0.3s ease",
         }}
       />
@@ -58,8 +58,8 @@ export default function UnboxingParcel({ tapCount, isShaking, onClick }: Unboxin
       <div
         style={{
           position: "relative",
-          width: "260px",
-          height: "320px",
+          width: "420px",
+          height: "420px",
           zIndex: 2,
           display: "flex",
           alignItems: "center",
@@ -74,7 +74,7 @@ export default function UnboxingParcel({ tapCount, isShaking, onClick }: Unboxin
           height="100%"
           style={{
             transition: "all 0.6s cubic-bezier(0.19, 1, 0.22, 1)",
-            filter: "drop-shadow(0 12px 28px rgba(0, 0, 0, 0.16)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08))",
+            filter: "drop-shadow(0 16px 36px rgba(0, 0, 0, 0.22)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.12))",
           }}
         >
           {/* Load raw high-res master SVG file using crop coordinate mapping */}
@@ -92,15 +92,15 @@ export default function UnboxingParcel({ tapCount, isShaking, onClick }: Unboxin
           <div
             style={{
               position: "absolute",
-              bottom: "40px",
+              bottom: "20px",
               backgroundColor: "var(--color-primary)",
               color: "#FFFFFF",
-              fontSize: "12px",
+              fontSize: "13px",
               fontWeight: "800",
-              padding: "6px 14px",
+              padding: "8px 18px",
               borderRadius: "20px",
-              boxShadow: "0 6px 16px rgba(91,127,166,0.4)",
-              border: "1.5px solid rgba(255,255,255,0.2)",
+              boxShadow: "0 6px 20px rgba(91,127,166,0.5)",
+              border: "1.5px solid rgba(255,255,255,0.25)",
               pointerEvents: "none",
               letterSpacing: "0.5px",
               animation: "bouncePrompt 2s infinite ease-in-out",
@@ -116,7 +116,8 @@ export default function UnboxingParcel({ tapCount, isShaking, onClick }: Unboxin
           user-select: none;
         }
         .parcel-vector-container:hover {
-          transform: scale(1.05) translateY(-4px);
+          transform: scale(1.08) translateY(-8px);
+          filter: drop-shadow(0 20px 40px rgba(169, 146, 196, 0.25));
         }
         .parcel-unbox-wrapper:active .parcel-vector-container {
           transform: scale(0.96) translateY(2px);

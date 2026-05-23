@@ -105,6 +105,16 @@ export async function testConnection(): Promise<void> {
       ADD COLUMN IF NOT EXISTS mascot_pose VARCHAR(50);
     `);
 
+    // Recreate chat_messages check constraint to allow 'sparky', 'user', and 'companion'
+    await client.query(`
+      ALTER TABLE chat_messages 
+      DROP CONSTRAINT IF EXISTS chat_messages_sender_check;
+      
+      ALTER TABLE chat_messages 
+      ADD CONSTRAINT chat_messages_sender_check 
+      CHECK (sender IN ('user', 'sparky', 'companion'));
+    `);
+
     client.release();
     console.log("[DB Success] PostgreSQL connected successfully & profiles/personas/journals schemas verified.");
   } catch (err) {

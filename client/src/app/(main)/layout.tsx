@@ -107,11 +107,22 @@ export default function AuthenticatedLayout({
         <div className="ambient-glow ambient-glow-1" />
         <div className="ambient-glow ambient-glow-2" />
         <div className="ambient-glow ambient-glow-3" />
+
+        {/* Drifting animated bubbles */}
+        <div className="floating-bubble bubble-1" />
+        <div className="floating-bubble bubble-2" />
+        <div className="floating-bubble bubble-3" />
+        <div className="floating-bubble bubble-4" />
+
         <main
           style={{
             maxWidth: "800px",
             width: "100%",
-            margin: "0 auto",
+            margin: "0",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
             position: "relative",
             zIndex: 2,
           }}

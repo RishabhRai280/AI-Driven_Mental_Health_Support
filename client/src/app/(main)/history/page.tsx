@@ -525,16 +525,6 @@ export default function HistoryPage() {
                   <select
                     value={formType}
                     onChange={(e) => setFormType(e.target.value as any)}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      border: "1.5px solid var(--border-input)",
-                      backgroundColor: "var(--bg-surface)",
-                      color: "var(--text-primary)",
-                      fontSize: "14px",
-                      outline: "none",
-                    }}
                   >
                     <option value="journal">Reflection</option>
                     <option value="chat">Companion Chat</option>
@@ -556,16 +546,6 @@ export default function HistoryPage() {
                   <select
                     value={formSentiment}
                     onChange={(e) => setFormSentiment(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      border: "1.5px solid var(--border-input)",
-                      backgroundColor: "var(--bg-surface)",
-                      color: "var(--text-primary)",
-                      fontSize: "14px",
-                      outline: "none",
-                    }}
                   >
                     <option value="Positive">Positive</option>
                     <option value="Neutral">Neutral</option>

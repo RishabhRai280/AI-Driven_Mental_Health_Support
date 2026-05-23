@@ -137,6 +137,45 @@ export default function DashboardPage() {
   // Real-time wellness logs from database
   const [dbLogs, setDbLogs] = useState<any[]>([]);
 
+  const handleSkipOnboarding = async () => {
+    try {
+      setIsLoadingMascot(true);
+      // Save default mascot
+      await api.post("/api/mascot", {
+        name: "Zen Panda",
+        eggType: "Peaceful Panda",
+        personality: "Calming & Stoic",
+        level: 1,
+      });
+      // Save default persona
+      await api.post("/api/mascot/persona", {
+        age: 25,
+        occupation: "SereneMind User",
+        sleepHours: "7-8 hours",
+        stressLevel: 3,
+        selfCareScale: 8,
+        mentalGoal: "Achieve Calmer Baselines",
+        triggers: [
+          "water:1-2 Liters",
+          "screentime:5-8 Hours",
+          "social:Strong Support Network",
+          "activity:Light Walking / Yoga",
+          "persona:Beginner Wellness User"
+        ],
+      });
+      
+      // Update local storage companion type so page renders correct mascot
+      localStorage.setItem("serenemind-companion-type", "pandi");
+
+      // Reload to main dashboard
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to auto-adopt default mascot:", err);
+      alert("Something went wrong skipping onboarding. Please try again.");
+      setIsLoadingMascot(false);
+    }
+  };
+
   // Normal Dashboard states
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const [mascotPose, setMascotPose] = useState<HamsterPose>("waving-hello");
@@ -741,15 +780,38 @@ export default function DashboardPage() {
         className="glass-card"
         style={{
           maxWidth: "800px",
-          margin: "40px auto",
-          padding: "40px 32px",
+          width: "100%",
+          margin: "0 auto",
+          padding: "48px 40px",
           display: "flex",
           flexDirection: "column",
-          gap: "24px",
-          boxShadow: "var(--shadow-hover)",
+          gap: "32px",
+          boxShadow: "var(--shadow-hover), 0 20px 50px rgba(0, 0, 0, 0.12)",
           border: "1px solid var(--border-light)",
+          borderRadius: "32px",
+          position: "relative",
+          animation: "fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       >
+        {/* Skip Onboarding Button */}
+        <button
+          onClick={handleSkipOnboarding}
+          type="button"
+          className="btn-secondary"
+          style={{
+            position: "absolute",
+            top: "24px",
+            right: "24px",
+            padding: "8px 16px",
+            fontSize: "12px",
+            border: "1px solid var(--border-light)",
+            borderRadius: "14px",
+            zIndex: 10,
+          }}
+          title="Directly enter the dashboard using a Peaceful Panda companion"
+        >
+          Skip Onboarding &rarr;
+        </button>
         {hatchStep === "choose" && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "24px", padding: "10px 0" }}>
             <div style={{ textAlign: "center" }}>
@@ -895,8 +957,8 @@ export default function DashboardPage() {
                 }
                 setHatchStep("name");
               }}
-              className="btn-primary"
-              style={{ alignSelf: "center", padding: "12px 32px", marginTop: "8px" }}
+              className="btn-premium-gradient"
+              style={{ alignSelf: "center", marginTop: "8px" }}
               disabled={!selectedEgg}
             >
               Adopt Selected Companion
@@ -940,16 +1002,6 @@ export default function DashboardPage() {
                 <select
                   value={mascotDemeanor}
                   onChange={(e) => setMascotDemeanor(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    borderRadius: "12px",
-                    border: "1.5px solid var(--border-input)",
-                    backgroundColor: "var(--bg-surface)",
-                    color: "var(--text-primary)",
-                    fontSize: "14px",
-                    outline: "none",
-                  }}
                 >
                   <option value="Cheerfully Energetic">Cheerfully Energetic</option>
                   <option value="Calming & Stoic">Calming & Stoic</option>
@@ -958,7 +1010,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <button type="submit" className="btn-primary" style={{ alignSelf: "center", padding: "12px 32px", marginTop: "10px" }}>
+            <button type="submit" className="btn-premium-gradient" style={{ alignSelf: "center", marginTop: "10px" }}>
               Begin Adoption!
             </button>
           </form>
@@ -998,16 +1050,6 @@ export default function DashboardPage() {
                 <select
                   value={sleepHours}
                   onChange={(e) => setSleepHours(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    borderRadius: "12px",
-                    border: "1.5px solid var(--border-input)",
-                    backgroundColor: "var(--bg-surface)",
-                    color: "var(--text-primary)",
-                    fontSize: "14px",
-                    outline: "none",
-                  }}
                 >
                   <option value="<5 hours">&lt;5 hours (Risk range)</option>
                   <option value="5-6 hours">5-6 hours (Moderate debt)</option>
@@ -1023,16 +1065,6 @@ export default function DashboardPage() {
                 <select
                   value={mentalGoal}
                   onChange={(e) => setMentalGoal(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    borderRadius: "12px",
-                    border: "1.5px solid var(--border-input)",
-                    backgroundColor: "var(--bg-surface)",
-                    color: "var(--text-primary)",
-                    fontSize: "14px",
-                    outline: "none",
-                  }}
                 >
                   <option value="Reduce Panic Sparks">Reduce Panic Sparks</option>
                   <option value="Achieve Calmer Baselines">Achieve Calmer Baselines</option>
@@ -1064,16 +1096,19 @@ export default function DashboardPage() {
                           key={val}
                           onClick={() => updateStressChoice(idx, val)}
                           style={{
-                            padding: "8px",
-                            borderRadius: "8px",
-                            fontSize: "11px",
+                            padding: "10px 12px",
+                            borderRadius: "12px",
+                            fontSize: "12px",
                             fontWeight: "600",
                             cursor: "pointer",
-                            border: selected ? "2px solid var(--color-error)" : "1px solid var(--border-light)",
+                            border: selected ? "2px solid var(--color-error)" : "1.5px solid var(--border-light)",
                             backgroundColor: selected ? "rgba(192, 118, 90, 0.08)" : "var(--bg-surface)",
                             color: selected ? "var(--color-error)" : "var(--text-secondary)",
-                            transition: "all 0.15s ease",
+                            boxShadow: selected ? "0 4px 12px rgba(192, 118, 90, 0.12)" : "none",
+                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                            transform: selected ? "scale(1.03)" : "scale(1)",
                           }}
+                          className="screener-pill-btn"
                         >
                           {label}
                         </button>
@@ -1106,16 +1141,19 @@ export default function DashboardPage() {
                           key={val}
                           onClick={() => updateCareChoice(idx, val)}
                           style={{
-                            padding: "8px",
-                            borderRadius: "8px",
-                            fontSize: "11px",
+                            padding: "10px 12px",
+                            borderRadius: "12px",
+                            fontSize: "12px",
                             fontWeight: "600",
                             cursor: "pointer",
-                            border: selected ? "2px solid var(--color-success)" : "1px solid var(--border-light)",
+                            border: selected ? "2px solid var(--color-success)" : "1.5px solid var(--border-light)",
                             backgroundColor: selected ? "rgba(125, 170, 143, 0.08)" : "var(--bg-surface)",
                             color: selected ? "var(--color-success)" : "var(--text-secondary)",
-                            transition: "all 0.15s ease",
+                            boxShadow: selected ? "0 4px 12px rgba(125, 170, 143, 0.12)" : "none",
+                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                            transform: selected ? "scale(1.03)" : "scale(1)",
                           }}
+                          className="screener-pill-btn"
                         >
                           {label}
                         </button>
@@ -1217,7 +1255,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <button type="submit" className="btn-primary" style={{ alignSelf: "center", padding: "12px 32px", marginTop: "10px" }}>
+            <button type="submit" className="btn-premium-gradient" style={{ alignSelf: "center", marginTop: "10px" }}>
               Establish Persona & Enter SereneMind
             </button>
           </form>
@@ -1346,6 +1384,11 @@ export default function DashboardPage() {
           }
           .egg-card:hover .egg-render {
             transform: scale(1.05) rotate(-2deg);
+          }
+          .screener-pill-btn:hover {
+            transform: translateY(-2px) scale(1.02) !important;
+            border-color: var(--color-primary) !important;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
           }
           @keyframes floatUp {
             0% {

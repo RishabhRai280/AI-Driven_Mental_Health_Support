@@ -577,7 +577,7 @@ export default function ChatbotPage() {
           <h3 style={{ fontSize: "17px", fontFamily: "var(--font-header)", marginBottom: "16px", fontWeight: "600" }}>
             {companionName} Companion
           </h3>
-          <Mascot pose={mascotPose} size={150} dialogue={mascotDialogue} interactive={false} />
+          <Mascot pose={mascotPose} size={150} dialogue="" interactive={false} />
 
           {/* Dynamic Companion Mood Status Card */}
           {(() => {

@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
 
 // Thread session tracking map to guarantee rotation and completely prevent repetitive crisis messages
 const lastCrisisIndexMap = new Map<string, number>();

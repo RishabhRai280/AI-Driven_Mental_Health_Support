@@ -895,16 +895,6 @@ export default function ProfilePage() {
                   <select
                     value={tempSleepHours}
                     onChange={(e) => setTempSleepHours(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      border: "1.5px solid var(--border-input)",
-                      backgroundColor: "var(--bg-surface)",
-                      color: "var(--text-primary)",
-                      fontSize: "14px",
-                      outline: "none",
-                    }}
                   >
                     <option value="<5 hours">&lt;5 hours (Risk level)</option>
                     <option value="5-6 hours">5-6 hours (Moderate debt)</option>
@@ -931,16 +921,6 @@ export default function ProfilePage() {
                   <select
                     value={tempGoal}
                     onChange={(e) => setTempGoal(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "12px",
-                      border: "1.5px solid var(--border-input)",
-                      backgroundColor: "var(--bg-surface)",
-                      color: "var(--text-primary)",
-                      fontSize: "14px",
-                      outline: "none",
-                    }}
                   >
                     <option value="Reduce Panic Sparks">
                       Reduce Panic Sparks
