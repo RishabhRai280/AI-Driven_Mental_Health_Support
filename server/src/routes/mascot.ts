@@ -126,7 +126,17 @@ router.post("/persona", requireAuth, async (req: AuthRequest, res: Response): Pr
   let screenTime = "5-8 Hours";
   let socialContext = "Neutral Connection";
   let physicalActivity = "Light Walking / Yoga";
-  const preferredName = (req.user as any).displayName || req.user!.email.split("@")[0] || "Ranjeet choudhary";
+
+  // Fetch real display name from users table
+  let preferredName = req.user!.email.split("@")[0];
+  try {
+    const userRes = await pool.query("SELECT display_name FROM users WHERE id = $1", [userId]);
+    if (userRes.rows.length > 0 && userRes.rows[0].display_name) {
+      preferredName = userRes.rows[0].display_name;
+    }
+  } catch (err) {
+    console.error("Failed to fetch display_name in mascot persona route:", err);
+  }
 
   if (Array.isArray(triggers)) {
     const waterMatch = triggers.find(t => t.startsWith("water:"));
