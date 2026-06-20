@@ -6,7 +6,7 @@ dotenv.config();
 let pool: Pool | null = null;
 let isDevelopmentMode = false;
 
-const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
 
 const isLocal = dbUrl?.includes("localhost") || dbUrl?.includes("127.0.0.1");
 
