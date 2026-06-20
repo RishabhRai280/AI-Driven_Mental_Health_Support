@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = useCallback(async (email: string, password: string): Promise<void> => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/auth/login`, {
+    const res = await fetch(`${process.env.NODE_ENV === "production" ? "" : "http://localhost:3001"}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(async (email: string, password: string, displayName?: string): Promise<void> => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/auth/register`, {
+    const res = await fetch(`${process.env.NODE_ENV === "production" ? "" : "http://localhost:3001"}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, displayName }),
