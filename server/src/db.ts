@@ -6,10 +6,12 @@ dotenv.config();
 let pool: Pool | null = null;
 let isDevelopmentMode = false;
 
+const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
 // Initialize pool with fallback for development
-if (process.env.DATABASE_URL) {
+if (dbUrl) {
   pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: dbUrl,
     // Connection pool settings
     max: 10,
     idleTimeoutMillis: 30000,

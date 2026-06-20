@@ -11,6 +11,7 @@ import journalRoutes from "./routes/journals";
 import chatRoutes from "./routes/chats";
 import exerciseRoutes from "./routes/exercises";
 import calendarRoutes from "./routes/calendar";
+import migrateRoutes from "./routes/migrate";
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.use("/api/journals", journalRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/exercises", exerciseRoutes);
 app.use("/api/calendar", calendarRoutes);
+app.use("/api/migrate", migrateRoutes);
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {
