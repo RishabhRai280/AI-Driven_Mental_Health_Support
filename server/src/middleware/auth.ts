@@ -14,7 +14,10 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
   const token = authHeader.slice(7);
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+    const decoded = jwt.verify(
+      token, 
+      (process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET) as string
+    ) as {
       id: string;
       email: string;
     };

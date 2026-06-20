@@ -39,7 +39,7 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     const user = result.rows[0];
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.JWT_SECRET as string,
+      (process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET) as string,
       { expiresIn: "30d" }
     );
 
@@ -84,7 +84,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.JWT_SECRET as string,
+      (process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET) as string,
       { expiresIn: "30d" }
     );
 
@@ -109,7 +109,10 @@ router.get("/me", async (req: Request, res: Response): Promise<void> => {
 
   try {
     const token = authHeader.slice(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string; email: string };
+    const decoded = jwt.verify(
+      token, 
+      (process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET) as string
+    ) as { id: string; email: string };
 
     const result = await pool.query(
       "SELECT id, email, display_name FROM users WHERE id = $1",
