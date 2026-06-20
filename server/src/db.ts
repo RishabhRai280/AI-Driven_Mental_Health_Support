@@ -12,6 +12,7 @@ const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 if (dbUrl) {
   pool = new Pool({
     connectionString: dbUrl,
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
     // Connection pool settings
     max: 10,
     idleTimeoutMillis: 30000,
