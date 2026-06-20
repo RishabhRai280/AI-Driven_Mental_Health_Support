@@ -512,55 +512,60 @@ export default function DashboardPage() {
     Negative: 1.5,
   };
 
-  // Mock logs for Demo Mode when database is empty
-  const mockLogs = useMemo(() => [
-    {
-      id: "mock-1",
-      type: "mood",
-      title: "Morning Calm State",
-      preview: "Started the day with deep box breathing and quiet tea.",
-      sentiment: "Positive",
-      date: "May 18, 2026 at 8:30 AM"
-    },
-    {
-      id: "mock-2",
-      type: "journal",
-      title: "Reflection on Boundaries",
-      preview: "Felt overwhelmed by project sprint. Set computer aside.",
-      sentiment: "Neutral",
-      date: "May 19, 2026 at 6:15 PM"
-    },
-    {
-      id: "mock-3",
-      type: "chat",
-      title: "Mascot Pacing Talk",
-      preview: "Sparky noticed elevated screen time. Guided me to step outside.",
-      sentiment: "Anxious",
-      date: "May 20, 2026 at 3:10 PM"
-    },
-    {
-      id: "mock-4",
-      type: "exercise",
-      title: "Breathing Exercise",
-      preview: "Completed 5 full cycles of deep box breathing.",
-      sentiment: "Positive",
-      date: "May 21, 2026 at 11:45 AM"
-    },
-    {
-      id: "mock-5",
-      type: "mood",
-      title: "Evening Stressed check-in",
-      preview: "Sprint deadline approaching. Shared worries with companion.",
-      sentiment: "Stressed",
-      date: "May 22, 2026 at 8:20 PM"
+  const activeLogs = dbLogs;
+
+  const streakDays = useMemo(() => {
+    if (dbLogs.length === 0) return 0;
+    
+    const dates = Array.from(new Set(dbLogs.map(log => {
+      if (!log.date) return "";
+      const datePart = log.date.split(" at ")[0];
+      const d = new Date(datePart);
+      if (isNaN(d.getTime())) return "";
+      return d.toDateString(); // e.g. "Fri May 22 2026"
+    }).filter(Boolean)));
+
+    if (dates.length === 0) return 0;
+
+    // Sort dates descending
+    const dateObjs = dates.map(d => new Date(d)).sort((a, b) => b.getTime() - a.getTime());
+
+    // Get today and yesterday dates at midnight local time
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const latestLogDate = new Date(dateObjs[0]);
+    latestLogDate.setHours(0, 0, 0, 0);
+
+    // If the latest log is not today and not yesterday, streak is 0
+    if (latestLogDate.getTime() !== today.getTime() && latestLogDate.getTime() !== yesterday.getTime()) {
+      return 0;
     }
-  ], []);
 
-  const isDemoMode = useMemo(() => dbLogs.length === 0, [dbLogs]);
+    let streak = 1;
+    let currentCheck = new Date(latestLogDate);
 
-  const activeLogs = useMemo(() => {
-    return isDemoMode ? mockLogs : dbLogs;
-  }, [dbLogs, isDemoMode, mockLogs]);
+    for (let i = 1; i < dateObjs.length; i++) {
+      const prevDay = new Date(currentCheck);
+      prevDay.setDate(prevDay.getDate() - 1);
+      prevDay.setHours(0, 0, 0, 0);
+
+      const logDate = new Date(dateObjs[i]);
+      logDate.setHours(0, 0, 0, 0);
+
+      if (logDate.getTime() === prevDay.getTime()) {
+        streak++;
+        currentCheck = prevDay;
+      } else if (logDate.getTime() < prevDay.getTime()) {
+        break;
+      }
+    }
+
+    return streak;
+  }, [dbLogs]);
 
   // Helper to check if all trend logs occurred on the same calendar day
   const allSameDay = useMemo(() => {
@@ -1649,12 +1654,6 @@ export default function DashboardPage() {
               <div className="section-header-left">
                 <h3 className="section-title">
                   Resilience & Mood Trend
-                  {isDemoMode && (
-                    <span className="demo-badge-pill">
-                      <span className="demo-dot" />
-                      Demo Baseline
-                    </span>
-                  )}
                 </h3>
                 <p className="section-subtitle">Vagal tone & mental variance telemetry</p>
               </div>
@@ -1833,12 +1832,6 @@ export default function DashboardPage() {
               <div className="section-header-left">
                 <h3 className="section-title">
                   Mindfulness Mix
-                  {isDemoMode && (
-                    <span className="demo-badge-pill">
-                      <span className="demo-dot" />
-                      Demo Baseline
-                    </span>
-                  )}
                 </h3>
                 <p className="section-subtitle">Logs breakdown across categories</p>
               </div>
@@ -1944,7 +1937,7 @@ export default function DashboardPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
               </div>
               <div className="badge-text-zone">
-                <span className="badge-title">5 Days</span>
+                <span className="badge-title">{streakDays} Day{streakDays === 1 ? "" : "s"}</span>
                 <span className="badge-subtitle">Streak</span>
               </div>
             </div>

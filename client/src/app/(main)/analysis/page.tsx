@@ -14,48 +14,6 @@ const moodValues: Record<Mood, number> = {
   Stressed: 1,
 };
 
-// Client-side mock calendar generation if database contains no logged days
-function generateMockCalendar(month: number, year: number): Record<number, CalendarDay> {
-  const mockData: Record<number, CalendarDay> = {};
-  const today = new Date();
-  const isCurrentMonth = today.getMonth() + 1 === month && today.getFullYear() === year;
-  const limitDay = isCurrentMonth ? today.getDate() - 1 : 28; // Fill up to yesterday if current month, else fill first 28 days
-
-  const moodPool: Mood[] = [
-    "Calm", "Energetic", "Calm", "Anxious", "Calm", "Stressed", 
-    "Sad", "Calm", "Energetic", "Calm", "Anxious", "Calm", 
-    "Sad", "Calm", "Energetic", "Calm"
-  ];
-  
-  const notesPool = [
-    "Had a peaceful morning walk. Very productive session.",
-    "Felt motivated and energized today, completed two major tasks.",
-    "Quiet day. Practiced slow breathing in the afternoon.",
-    "A bit worried about the upcoming review. Slept slightly late.",
-    "Balanced day. Enjoyed a hot cup of tea and wrote in my journal.",
-    "Tough workload today. Felt tight in my chest during the meeting.",
-    "Felt a bit low and reflective today. Spent time reading.",
-    "Excellent progress today. Felt balanced and focused.",
-    "Had a fun catch-up with an old friend. Mood was elevated.",
-    "Felt very centered. Sparky's advice helped me unwind.",
-    "Felt somewhat restless in the evening, but meditated before bed.",
-    "A calming cup of tea and a light stroll. Very restorative.",
-    "Quiet evening reflecting on recent wins. Peaceful vibe.",
-    "Highly focused study block. Felt in control and stable.",
-    "Full of energy today, went for a run in the afternoon.",
-    "Deeply relaxed today. Felt content with my current pacing."
-  ];
-
-  for (let d = 1; d <= limitDay; d++) {
-    const seed = (d * 17 + month * 31 + year * 7) % moodPool.length;
-    mockData[d] = {
-      day: d,
-      mood: moodPool[seed],
-      note: notesPool[seed],
-    };
-  }
-  return mockData;
-}
 
 export default function AnalysisPage() {
   const [calendar, setCalendar] = useState<Record<number, CalendarDay>>({});
@@ -100,22 +58,9 @@ export default function AnalysisPage() {
         }>(`/api/calendar?month=${currentMonth}&year=${currentYear}`);
         const calMap: Record<number, CalendarDay> = {};
 
-        // If the database has zero logged days for this month, pre-seed with realistic mock data
-        const hasAnyLogs = data.days.some((d) => d.mood !== null);
-        if (!hasAnyLogs) {
-          const mocks = generateMockCalendar(currentMonth, currentYear);
-          data.days.forEach((d) => {
-            if (mocks[d.day]) {
-              calMap[d.day] = mocks[d.day];
-            } else {
-              calMap[d.day] = d;
-            }
-          });
-        } else {
-          data.days.forEach((d) => {
-            calMap[d.day] = d;
-          });
-        }
+        data.days.forEach((d) => {
+          calMap[d.day] = d;
+        });
 
         setCalendar(calMap);
       } catch (err) {
