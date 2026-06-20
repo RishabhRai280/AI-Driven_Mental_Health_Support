@@ -10,10 +10,12 @@ const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING |
 
 const isLocal = dbUrl?.includes("localhost") || dbUrl?.includes("127.0.0.1");
 
+const cleanUrl = dbUrl ? dbUrl.split("?")[0] : undefined;
+
 // Initialize pool with fallback for development
-if (dbUrl) {
+if (cleanUrl) {
   pool = new Pool({
-    connectionString: dbUrl,
+    connectionString: cleanUrl,
     ssl: isLocal ? false : { rejectUnauthorized: false },
     // Connection pool settings
     max: 10,
